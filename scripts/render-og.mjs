@@ -1,14 +1,18 @@
 // Renders the social share card → public/og/artix-prop.jpg (1200×630, used for og:image + twitter:image).
 // 1) a running site (npm run dev) — the black hole is captured from the real WebGL hero
 // 2) Chrome with --remote-debugging-port=9333 (headless is fine)
-// 3) npm run render:og -- [siteUrl=http://localhost:3000/] [host label=prop.artixcapital.com]
+// 3) npm run render:og -- [siteUrl=http://localhost:3000/] [host label=domain in public/CNAME]
 // After re-rendering, bump ?v= on ogImage in app/pages/index.vue so platforms refetch it.
-import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 
-const [site = 'http://localhost:3000/', host = 'prop.artixcapital.com'] = process.argv.slice(2)
+const cname = (() => {
+  try {
+    return readFileSync('public/CNAME', 'utf8').trim()
+  } catch {
+    return ''
+  }
+})()
+const [site = 'http://localhost:3000/', host = cname || 'artixcapital.com'] = process.argv.slice(2)
 const OUT = 'public/og/artix-prop.jpg'
 const PLATE_W = 1500 // wider than the card so the black hole sits right of centre
 const PLATE_LEFT = 40 // card x where the plate starts → hole centre ≈ 40 + 750
@@ -64,32 +68,31 @@ await wait(2500)
 const plate = (await a.send('Page.captureScreenshot', { format: 'png' })).result.data
 await a.close()
 
-// 2. Compose the card (from a temp file: large data-URL images don't load via setDocumentContent).
-const tmp = mkdtempSync(join(tmpdir(), 'artix-og-'))
-writeFileSync(join(tmp, 'plate.png'), Buffer.from(plate, 'base64'))
-writeFileSync(
-  join(tmp, 'card.html'),
-  readFileSync('tools/og/card.html', 'utf8')
-    .replace('__PLATE__', 'plate.png')
-    .replace('__PLATE_LEFT__', String(PLATE_LEFT))
-    .replace('__HOST__', host)
-)
+// 2. Compose the card. The plate is injected from JS and awaited, so the screenshot never races its decode.
+const html = readFileSync('tools/og/card.html', 'utf8')
+  .replace('__PLATE_LEFT__', String(PLATE_LEFT))
+  .replace('__HOST__', host)
 const b = await openTab('about:blank')
 await b.send('Page.enable')
 await b.send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 630, deviceScaleFactor: 1, mobile: false })
-await b.send('Page.navigate', { url: pathToFileURL(join(tmp, 'card.html')).href })
-await wait(1000)
+const { result: frame } = await b.send('Page.getFrameTree')
+await b.send('Page.setDocumentContent', { frameId: frame.frameTree.frame.id, html })
 const ready = await b.send('Runtime.evaluate', {
-  expression:
-    'Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode())]).then(() => [location.href, ...[...document.images].map((i) => i.naturalWidth)].join(" "), (e) => "ERR " + e)',
+  expression: `(async () => {
+    const img = document.querySelector('.plate')
+    img.src = 'data:image/png;base64,${plate}'
+    await img.decode()
+    await document.fonts.ready
+    return img.naturalWidth
+  })()`,
   awaitPromise: true,
   returnByValue: true
 })
-console.log('card:', ready.result?.result?.value)
-await wait(500)
+const plateW = ready.result?.result?.value
+if (typeof plateW !== 'number' || !plateW) throw new Error(`plate failed to load: ${JSON.stringify(ready.result)}`)
+await wait(800)
 const card = (await b.send('Page.captureScreenshot', { format: 'jpeg', quality: 88 })).result.data
 await b.close()
-rmSync(tmp, { recursive: true, force: true })
 
 mkdirSync('public/og', { recursive: true })
 writeFileSync(OUT, Buffer.from(card, 'base64'))

@@ -84,7 +84,13 @@ const fragment = /* glsl */ `
   }
 
   void main(){
-    vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+    // Normalise by the SHORTER side so portrait phones see the whole hole + disk instead of a
+    // narrow, zoomed-in vertical slice. On portrait screens also pull back a little and sit the
+    // hole below the headline; it drifts back to centre as the scroll dive progresses.
+    float portrait = step(uRes.x, uRes.y);
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / min(uRes.x, uRes.y);
+    uv *= mix(1.0, 1.3, portrait);
+    uv.y += portrait * 0.45 * (1.0 - uProgress);
 
     // Camera — scroll pulls us towards the hole and lifts above the disk
     float dist = mix(17.0, 8.5, uProgress);

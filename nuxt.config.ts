@@ -2,7 +2,8 @@
 
 // Public origin of the site, no trailing slash. Used for canonical URLs, og:image, sitemap and JSON-LD.
 // Set NUXT_PUBLIC_SITE_URL at BUILD time (the homepage is prerendered, so the value is baked into the HTML).
-const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://prop.artixcapital.com').replace(/\/+$/, '')
+// Default matches public/CNAME (the deploy domain).
+const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://prop.itsash.in').replace(/\/+$/, '')
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -42,7 +43,9 @@ export default defineNuxtConfig({
     '/': { prerender: true }
   },
   nitro: {
-    prerender: { routes: ['/', '/sitemap.xml', '/robots.txt'] }
+    prerender: { routes: ['/', '/sitemap.xml', '/robots.txt'] },
+    // `nuxt generate` writes the static site to docs/, which GitHub Pages serves from the main branch.
+    output: { publicDir: 'docs' }
   },
   // Dev-only tooling pages (e.g. /dev/mountain, the mountain image exporter) never ship to production.
   $production: {
