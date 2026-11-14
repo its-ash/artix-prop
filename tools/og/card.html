@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+  Social share card (1200×630). Rendered by scripts/render-og.mjs, which injects
+  the black-hole frame captured from the live hero as __PLATE__.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; background: #05050a; }
+  body { position: relative; color: #fff; font-family: 'Inter Tight', sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .plate { position: absolute; top: 0; left: __PLATE_LEFT__px; height: 630px; width: auto; }
+  /* keeps the copy readable over the accretion disk without killing the glow */
+  .shade {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(90deg, rgba(5,5,10,.92) 0%, rgba(5,5,10,.72) 34%, rgba(5,5,10,.12) 62%, rgba(5,5,10,0) 80%),
+      linear-gradient(0deg, rgba(5,5,10,.85) 0%, rgba(5,5,10,0) 30%);
+  }
+  .grain {
+    position: absolute; inset: 0; opacity: .1; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .copy { position: absolute; left: 72px; top: 64px; width: 640px; }
+  .logo { display: flex; align-items: center; gap: 12px; font-family: 'Space Grotesk'; font-weight: 700; letter-spacing: .04em; font-size: 24px; }
+  .logo .tag { font-family: 'JetBrains Mono'; font-size: 12px; letter-spacing: .16em; padding: 4px 8px; border-radius: 7px; color: #0b0b12; background: #ffb800; }
+  .eyebrow { margin-top: 52px; display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono'; font-size: 15px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.72); }
+  .eyebrow::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #ffb800; box-shadow: 0 0 12px #ffb800; }
+  h1 { margin-top: 18px; font-family: 'Space Grotesk'; font-weight: 600; font-size: 96px; line-height: .98; letter-spacing: -.045em; text-shadow: 0 0 50px rgba(0,0,0,.6); }
+  h1 .gold { color: #ffb800; }
+  .lead { margin-top: 24px; font-size: 24px; line-height: 1.35; color: rgba(255,255,255,.78); max-width: 30ch; }
+
+  .stats { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr) auto; border-top: 1px solid rgba(255,255,255,.12); }
+  .stat { padding: 22px 0 26px 72px; display: flex; flex-direction: column; gap: 2px; }
+  .stat + .stat { padding-left: 36px; border-left: 1px solid rgba(255,255,255,.08); }
+  .stat strong { font-family: 'Space Grotesk'; font-weight: 600; font-size: 34px; letter-spacing: -.03em; }
+  .stat span { font-size: 15px; color: rgba(255,255,255,.58); }
+  .url { align-self: center; padding: 0 56px 0 24px; font-family: 'JetBrains Mono'; font-size: 15px; letter-spacing: .06em; color: #ffb800; }
+</style>
+</head>
+<body>
+  <img class="plate" src="__PLATE__" alt="" />
+  <div class="shade"></div>
+  <div class="grain"></div>
+
+  <div class="copy">
+    <div class="logo">
+      <svg viewBox="0 0 32 32" width="40" height="40" aria-hidden="true">
+        <rect width="32" height="32" rx="9" fill="#fff" />
+        <path d="M9 24 16 8l7 16" fill="none" stroke="#ffb800" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M12 18.5h8" stroke="#ffb800" stroke-width="3" stroke-linecap="round" />
+      </svg>
+      <span>ARTIX</span><span class="tag">PROP</span>
+    </div>
+    <div class="eyebrow">Artix Capital · Prop Program</div>
+    <h1>Get funded.<br />Up to <span class="gold">$200K.</span></h1>
+    <p class="lead">Pass the challenge, trade our capital and keep up to 90% of the profits.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><strong>$200K</strong><span>Max allocation</span></div>
+    <div class="stat"><strong>90%</strong><span>Profit split</span></div>
+    <div class="stat"><strong>24h</strong><span>Payouts</span></div>
+    <div class="stat"><strong>150+</strong><span>Instruments</span></div>
+    <div class="url">__HOST__</div>
+  </div>
+</body>
+</html>

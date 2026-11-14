@@ -1,0 +1,13 @@
+{
+  "name": "Artix Prop — Artix Capital",
+  "short_name": "Artix Prop",
+  "description": "Get funded up to $200K. Pass a trading challenge, trade Artix capital and keep up to 90% of the profits.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

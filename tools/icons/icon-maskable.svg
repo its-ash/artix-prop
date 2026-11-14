@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- full-bleed square for maskable / apple-touch icons (OS applies its own rounding); mark kept in the 80% safe zone -->
+  <rect width="32" height="32" fill="#0b0b12"/>
+  <g transform="translate(16 16) scale(0.72) translate(-16 -16)">
+    <path d="M9 24 16 8l7 16" fill="none" stroke="#ffb800" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M12 18.5h8" stroke="#ffb800" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

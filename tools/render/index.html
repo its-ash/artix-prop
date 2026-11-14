@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Artix asset renderer</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: transparent;
+      }
+      body.preview {
+        background: #f4eef3;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Offline renderer for the site's still 3D artwork.
+      Run:  npx vite tools/render --port 5199
+      Open: http://localhost:5199/?asset=mountain   (or coins | capsule | ring | cubes | planet | shield)
+      Add &preview to see it on a light background. `window.__image` holds the exported WebP data URL.
+      `node scripts/render-assets.mjs` exports every asset into public/images/.
+    -->
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

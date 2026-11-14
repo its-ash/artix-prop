@@ -1,0 +1,382 @@
+/* ==========================================================================
+   Artix Prop — design tokens & global styles
+   White canvas + blended neon (magenta → violet → cyan)
+   ========================================================================== */
+
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f6f6fa;
+  --ink: #0b0b12;
+  --ink-2: #3b3b4a;
+  --muted: #7a7a8c;
+  --line: rgba(11, 11, 18, 0.08);
+  --line-strong: rgba(11, 11, 18, 0.14);
+
+  /* Single-colour system: one neon gold + black + white.
+     --neon-ink is the same gold, deepened so text on white stays readable. */
+  --neon-ink: #e0a000;
+  --neon: #ffb800;
+  --neon-2: #ffb800;
+  --neon-3: #ffb800;
+  --neon-soft: rgba(255, 184, 0, 0.14);
+  --neon-grad: linear-gradient(var(--neon), var(--neon));
+
+  --radius: 28px;
+  --radius-sm: 16px;
+  --container: 1240px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+::selection {
+  background: var(--neon);
+  color: var(--ink);
+}
+
+/* ---------- Layout helpers ---------- */
+
+.container {
+  width: min(100% - 48px, var(--container));
+  margin-inline: auto;
+}
+
+.section {
+  position: relative;
+  padding-block: clamp(96px, 14vw, 180px);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.eyebrow::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--neon-grad);
+  box-shadow: 0 0 12px var(--neon);
+}
+
+.h-display {
+  font-size: clamp(48px, 8.4vw, 132px);
+}
+.h-xl {
+  font-size: clamp(40px, 5.6vw, 84px);
+}
+.h-lg {
+  font-size: clamp(32px, 4vw, 56px);
+}
+.lead {
+  font-size: clamp(17px, 1.4vw, 20px);
+  color: var(--ink-2);
+  max-width: 56ch;
+}
+
+.grad-text {
+  /* gold text: bright neon on top, deeper gold below for legibility on white */
+  background: linear-gradient(180deg, var(--neon) 15%, var(--neon-ink) 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  --h: 52px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: var(--h);
+  padding: 0 26px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  transition: transform 0.5s var(--ease-out), box-shadow 0.5s var(--ease-out), background 0.3s;
+  isolation: isolate;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn-sm {
+  --h: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.btn-primary {
+  color: #fff;
+  background: var(--ink);
+  box-shadow: 0 10px 30px -10px rgba(255, 184, 0, 0.45);
+}
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--neon-grad);
+  filter: blur(14px);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+.btn-primary:hover::before {
+  opacity: 0.85;
+}
+
+/* White pill with a neon gradient border (as in the reference) */
+.btn-ghost {
+  color: var(--ink);
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    var(--neon-grad) border-box;
+  border: 1.5px solid transparent;
+  box-shadow: 0 8px 26px -12px rgba(255, 184, 0, 0.55);
+}
+.btn-ghost.on-dark {
+  color: #fff;
+  background:
+    linear-gradient(#0b0b12, #0b0b12) padding-box,
+    var(--neon-grad) border-box;
+}
+
+.btn .arrow {
+  transition: transform 0.5s var(--ease-out);
+}
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 30px 60px -40px rgba(11, 11, 18, 0.25);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--ink-2);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+/* ---------- Reveal (driven by v-reveal directive) ---------- */
+
+/* opacity + transform only: both run on the compositor. (A blur filter here repainted the page on every reveal.) */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 40px, 0);
+  transition:
+    opacity 1s var(--ease-out),
+    transform 1.2s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Split-line text: each word slides up from a mask */
+.split-line {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.split-line > span {
+  display: inline-block;
+  transform: translate3d(0, 110%, 0);
+  transition: transform 1.2s var(--ease-out);
+  transition-delay: var(--d, 0ms);
+}
+.is-in .split-line > span,
+.split-line.is-in > span {
+  transform: none;
+}
+
+/* ---------- Native CSS scroll-driven animations (progressive) ---------- */
+
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 100;
+  background: var(--neon-grad);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  pointer-events: none;
+}
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    animation: grow-x linear both;
+    animation-timeline: scroll(root block);
+  }
+  /* Elements tagged .sd-fade fade/scale in as they enter the viewport */
+  .sd-fade {
+    animation: sd-fade linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+}
+@keyframes grow-x {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes sd-fade {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Marquee ---------- */
+
+.marquee {
+  --gap: 56px;
+  display: flex;
+  overflow: hidden;
+  gap: var(--gap);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marquee__track {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--gap);
+  min-width: 100%;
+  justify-content: space-around;
+  animation: marquee var(--speed, 40s) linear infinite;
+}
+.marquee:hover .marquee__track {
+  animation-play-state: paused;
+}
+.marquee.reverse .marquee__track {
+  animation-direction: reverse;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+
+/* ---------- Background blobs ---------- */
+
+.neon-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
