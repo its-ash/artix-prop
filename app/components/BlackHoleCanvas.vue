@@ -22,9 +22,9 @@ const fragment = /* glsl */ `
   uniform float uTime;
   uniform float uProgress;
   uniform vec2  uMouse;
-  uniform vec3  uColA;   // neon magenta
-  uniform vec3  uColB;   // neon cyan
-  uniform vec3  uColC;   // violet blend
+  uniform vec3  uColA;   // neon gold (hot)
+  uniform vec3  uColB;   // deep amber (cool rim)
+  uniform vec3  uColC;   // glow tint
 
   #define R_IN  2.6
   #define R_OUT 11.0
@@ -39,6 +39,30 @@ const fragment = /* glsl */ `
     float v = 0.0, a = 0.5;
     for (int i = 0; i < 4; i++){ v += a*noise(p); p = p*2.03 + 7.1; a *= 0.5; }
     return v;
+  }
+
+  // 3D value noise: lets the disk texture wrap around the ring with no seam at the atan() cut
+  float hash3(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+  float noise3(vec3 x){
+    vec3 i = floor(x), f = fract(x);
+    f = f*f*(3.0-2.0*f);
+    return mix(
+      mix(mix(hash3(i), hash3(i+vec3(1,0,0)), f.x), mix(hash3(i+vec3(0,1,0)), hash3(i+vec3(1,1,0)), f.x), f.y),
+      mix(mix(hash3(i+vec3(0,0,1)), hash3(i+vec3(1,0,1)), f.x), mix(hash3(i+vec3(0,1,1)), hash3(i+vec3(1,1,1)), f.x), f.y),
+      f.z);
+  }
+  float fbm3(vec3 p){
+    float v = 0.0, a = 0.5;
+    for (int i = 0; i < 4; i++){ v += a*noise3(p); p = p*2.02 + vec3(3.1, 1.7, 5.3); a *= 0.5; }
+    return v;
+  }
+
+  // Turbulent plasma in disk coordinates. Noise lives on a cylinder (cos a, sin a, r), so clumps are
+  // stretched along the orbit (arcs and swirls) rather than radial hairlines; a cheap domain warp curls them.
+  float plasma(float a, float r, float seed){
+    vec3 c = vec3(cos(a) * 1.8, sin(a) * 1.8, r * 0.75 + seed);
+    vec3 w = vec3(noise3(c * 1.1 + seed), noise3(c * 1.1 + seed + 17.0), 0.0) - 0.5;
+    return fbm3(c * 2.0 + w * 1.8);
   }
 
   vec3 starfield(vec3 d){
@@ -58,27 +82,31 @@ const fragment = /* glsl */ `
     if (r < R_IN || r > R_OUT) return vec4(0.0);
     float t = (r - R_IN) / (R_OUT - R_IN);
 
-    // Keplerian rotation: inner rings orbit faster
-    float ang = atan(p.z, p.x) + uTime * 1.6 / pow(r, 1.5);
-    vec2 q = vec2(cos(ang), sin(ang)) * r;
-
     // smooth radial profile: hot, bright inner edge with a long soft fall-off
     float prof = smoothstep(0.0, 0.03, t) * (0.85 * exp(-t * 3.4) + 0.15 * (1.0 - t));
 
-    // gentle large-scale variation — never drops to black, so no dark gaps in the disk
-    float n = fbm(q * 0.6);
-    // fine concentric filaments (like the reference), shallow so they read as texture, not stripes
-    float fil = 0.88 + 0.12 * sin(r * 30.0 + n * 9.0) * sin(r * 11.0 - n * 5.0);
-    float I = prof * (0.8 + 0.4 * n) * fil;
+    // Keplerian rotation (inner rings orbit faster). Differential rotation shears any texture into
+    // hairlines over time, so the pattern is advected for one period only and two half-period-offset
+    // copies are cross-faded (flow-map trick): it keeps orbiting but never winds up.
+    const float P = 7.0;
+    float w  = 1.6 / pow(r, 1.5);
+    float a0 = atan(p.z, p.x);
+    float t1 = fract(uTime / P), t2 = fract(uTime / P + 0.5);
+    float n1 = plasma(a0 - w * t1 * P, r, floor(uTime / P) * 7.3);
+    float n2 = plasma(a0 - w * t2 * P, r, floor(uTime / P + 0.5) * 7.3 + 3.1);
+    float n  = mix(n1, n2, abs(2.0 * t1 - 1.0));
 
-    // relativistic beaming — the side spinning towards the camera is brighter
+    // contrasty clumps on a warm floor, so the disk never shows black gaps
+    float I = prof * (0.45 + 0.95 * smoothstep(0.28, 0.78, n));
+
+    // relativistic beaming: the side spinning towards the camera is brighter (kept moderate so it
+    // reads as hot gold, not a blown-out white smear)
     vec3 vel = normalize(vec3(-p.z, 0.0, p.x));
-    I *= pow(max(1.0 + 0.55 * dot(vel, -rd), 0.3), 2.6) * 2.3;
+    I *= pow(max(1.0 + 0.5 * dot(vel, -rd), 0.3), 2.2) * 1.8;
 
-    // colour by intensity (blackbody-style): deep amber → neon gold → white-hot core.
-    // Dim regions stay warm amber instead of turning grey.
-    vec3 col = mix(uColB, uColA, smoothstep(0.0, 1.0, I));
-    col = mix(col, vec3(1.0, 0.95, 0.82), smoothstep(2.6, 6.0, I));
+    // colour by intensity (blackbody-style): deep amber → neon gold → white only in the hottest knots
+    vec3 col = mix(uColB, uColA, smoothstep(0.0, 1.2, I));
+    col = mix(col, vec3(1.0, 0.95, 0.84), smoothstep(3.2, 7.0, I));
 
     return vec4(col * I, clamp(prof * 2.6, 0.0, 1.0));
   }
@@ -109,6 +137,8 @@ const fragment = /* glsl */ `
     vec3 v = rd;
     vec3 h = cross(p, v);
     float h2 = dot(h, h);
+    // impact parameter: rays just outside b = 3√3/2 · Rs skim the photon sphere → thin bright ring
+    float b = sqrt(h2);
 
     vec3 col = vec3(0.0);
     float alpha = 0.0;
@@ -125,7 +155,7 @@ const fragment = /* glsl */ `
       p += v * dt;
 
       // soft glow hugging the photon sphere
-      glow += dt * exp(-pow(r - 1.55, 2.0) * 4.0) * 0.11;
+      glow += dt * exp(-pow(r - 1.55, 2.0) * 4.0) * 0.06;
 
       if (prev.y * p.y < 0.0){
         vec3 hp = mix(prev, p, prev.y / (prev.y - p.y));
@@ -139,6 +169,14 @@ const fragment = /* glsl */ `
     }
 
     if (!captured) col += (1.0 - alpha) * starfield(normalize(v));
+
+    // Photon ring from the analytic impact parameter (not the per-pixel capture test, whose edge
+    // stair-steps): thin gold-white core with a short tail, edge smoothed over ~2 px in b units.
+    float db = b - 2.598;
+    float edge = smoothstep(-0.03, 0.0, db);
+    float dbo = max(db, 0.0);
+    vec3 ringCol = mix(uColA, vec3(1.0, 0.94, 0.8), 0.3);
+    col += (1.0 - alpha) * ringCol * edge * (exp(-dbo / 0.018) * 1.5 + exp(-dbo / 0.12) * 0.12);
     // keep the event-horizon shadow truly black; glow only outside it
     col += glow * mix(uColA, uColC, 0.5) * (1.0 - alpha) * (captured ? 0.12 : 1.0);
 
@@ -180,12 +218,16 @@ onMounted(() => {
   const mat = new THREE.ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms })
   scene.add(new THREE.Mesh(geo, mat))
 
+  // The host has a fixed viewport size (see CSS), so this only runs on real viewport changes, never
+  // while the hero panel animates its inset on scroll. Resizing clears a WebGL canvas, so redraw at
+  // once instead of showing a blank frame until the next rAF (that was the scroll "blink").
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = el
     renderer.setSize(w, h, false)
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.getDrawingBufferSize(uniforms.uRes.value)
+    renderer.render(scene, camera)
   }
   resize()
   const ro = new ResizeObserver(resize)
@@ -236,9 +278,15 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Full-viewport and centred in the panel, which clips it. The panel grows from a rounded card to
+   full-bleed on scroll; if the canvas followed it, it would be resized (and cleared) every frame. */
 .bh {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: 100vw;
+  height: max(100svh, 640px);
+  transform: translate(-50%, -50%);
 }
 .bh :deep(canvas) {
   display: block;
