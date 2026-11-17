@@ -1,5 +1,5 @@
 /**
- * Offline renderer for Artix Prop's still 3D artwork (single neon: gold).
+ * Offline renderer for Artix Prop's still 3D artwork (single accent: Artix Capital red).
  * Renders one asset at 2x supersampling, downsamples, and exposes a transparent WebP
  * as `window.__image`. See index.html for usage.
  */
@@ -8,7 +8,7 @@ import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-const NEON = '#ffb800'
+const NEON = '#b6f500'
 const q = new URLSearchParams(location.search)
 const asset = q.get('asset') ?? 'mountain'
 if (q.has('preview')) document.body.classList.add('preview')
@@ -106,7 +106,7 @@ function studioEnv({ neon = 5, white = 3, sky = 0.5 } = {}) {
 
 const M = {
   chromeGold: () =>
-    new THREE.MeshPhysicalMaterial({ color: '#ffc94a', metalness: 1, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.04 }),
+    new THREE.MeshPhysicalMaterial({ color: '#d9ff7a', metalness: 1, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.04 }),
   chrome: () => new THREE.MeshPhysicalMaterial({ color: '#dcdce2', metalness: 1, roughness: 0.1 }),
   dark: () =>
     new THREE.MeshPhysicalMaterial({ color: '#141418', metalness: 0.75, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.06 }),
@@ -118,7 +118,7 @@ const M = {
       transmission: 1,
       thickness: 0.9,
       ior: 1.45,
-      attenuationColor: new THREE.Color('#ffe2a0'),
+      attenuationColor: new THREE.Color('#eaffb8'),
       attenuationDistance: 2.5,
       clearcoat: 1,
       envMapIntensity: 1.6
@@ -126,7 +126,7 @@ const M = {
   neon: (k = 2.4) => new THREE.MeshStandardMaterial({ color: NEON, emissive: NEON, emissiveIntensity: k, roughness: 0.35 }),
   white: () => new THREE.MeshPhysicalMaterial({ color: '#f6f3ee', roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.05 }),
   goldGloss: () =>
-    new THREE.MeshPhysicalMaterial({ color: '#c98a00', roughness: 0.16, metalness: 0.25, clearcoat: 1, clearcoatRoughness: 0.04 })
+    new THREE.MeshPhysicalMaterial({ color: '#7fae00', roughness: 0.16, metalness: 0.25, clearcoat: 1, clearcoatRoughness: 0.04 })
 }
 
 function baseLights(scene) {

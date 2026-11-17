@@ -1,43 +1,45 @@
 <script setup lang="ts">
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
 const root = ref<HTMLElement>()
+const panel = ref<HTMLElement>()
 const btn = ref<HTMLElement>()
 const { $scrollTo } = useNuxtApp()
 
-// magnetic button
+// magnetic button: the CSS transition does the easing (.cta__btn / .cta__btn.is-back)
 const onMove = (e: PointerEvent) => {
   const el = btn.value
   if (!el) return
-  const r = el.getBoundingClientRect()
-  const x = e.clientX - (r.left + r.width / 2)
-  const y = e.clientY - (r.top + r.height / 2)
-  gsap.to(el, { x: x * 0.3, y: y * 0.4, duration: 0.6, ease: 'power3.out' })
+  // offsetLeft/Top ignore transforms, so the pull never feeds back into its own measurement
+  const host = (el.offsetParent as HTMLElement | null) ?? document.body
+  const r = host.getBoundingClientRect()
+  const cx = r.left + el.offsetLeft + el.offsetWidth / 2
+  const cy = r.top + el.offsetTop + el.offsetHeight / 2
+  const x = (e.clientX - cx) * 0.3
+  const y = (e.clientY - cy) * 0.4
+  el.classList.remove('is-back')
+  el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`
 }
-const onLeave = () => btn.value && gsap.to(btn.value, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.4)' })
+const onLeave = () => {
+  const el = btn.value
+  if (!el) return
+  el.classList.add('is-back')
+  el.style.transform = 'translate3d(0, 0, 0)'
+}
 
-let ctx: gsap.Context | undefined
+let stop: (() => void) | undefined
 onMounted(() => {
-  gsap.registerPlugin(ScrollTrigger)
-  ctx = gsap.context(() => {
-    gsap.fromTo(
-      '.cta__panel',
-      { clipPath: 'inset(12% 8% 12% 8% round 48px)' },
-      {
-        clipPath: 'inset(0% 0% 0% 0% round 32px)',
-        ease: 'none',
-        scrollTrigger: { trigger: root.value, start: 'top 90%', end: 'top 25%', scrub: true }
-      }
-    )
-  }, root.value)
+  // the panel opens up to full bleed as it scrolls in
+  stop = scrollScene(root.value, 'top 90%', 'top 25%', (p) => {
+    if (!panel.value) return
+    const q = 1 - p
+    panel.value.style.clipPath = `inset(${(12 * q).toFixed(2)}% ${(8 * q).toFixed(2)}% ${(12 * q).toFixed(2)}% ${(8 * q).toFixed(2)}% round ${(32 + 16 * q).toFixed(1)}px)`
+  })
 })
-onBeforeUnmount(() => ctx?.revert())
+onBeforeUnmount(() => stop?.())
 </script>
 
 <template>
-  <section ref="root" class="cta">
-    <div class="cta__panel">
+  <section ref="root" v-offscreen-pause class="cta">
+    <div ref="panel" class="cta__panel">
       <div class="cta__aurora" />
       <div class="cta__grid" />
       <div class="cta__inner" @pointermove="onMove" @pointerleave="onLeave">
@@ -61,8 +63,9 @@ onBeforeUnmount(() => ctx?.revert())
   overflow: hidden;
   isolation: isolate;
   border-radius: 32px;
-  background: #07070d;
+  background: var(--panel);
   color: #fff;
+  box-shadow: 0 0 0 1px var(--line-strong) inset;
   min-height: 80svh;
   display: grid;
   place-items: center;
@@ -72,10 +75,11 @@ onBeforeUnmount(() => ctx?.revert())
   inset: -30%;
   z-index: -2;
   background:
-    radial-gradient(30% 30% at 30% 60%, rgba(255, 184, 0, 0.55), transparent 70%),
-    radial-gradient(28% 28% at 72% 40%, rgba(255, 184, 0, 0.35), transparent 70%),
-    radial-gradient(30% 35% at 50% 85%, rgba(255, 184, 0, 0.45), transparent 70%);
-  filter: blur(60px);
+    radial-gradient(30% 30% at 30% 60%, rgba(var(--green-rgb), 0.35), transparent 70%),
+    radial-gradient(28% 28% at 72% 40%, rgba(var(--green-rgb), 0.4), transparent 70%),
+    radial-gradient(30% 35% at 50% 85%, rgba(255, 255, 255, 0.08), transparent 70%);
+  /* no blur filter: the radial gradients are already soft, and a blurred layer this large is costly */
+  will-change: transform;
   animation: drift 16s ease-in-out infinite alternate;
 }
 @keyframes drift {
@@ -110,12 +114,25 @@ onBeforeUnmount(() => ctx?.revert())
 }
 .btn-primary.light {
   background: #fff;
-  color: var(--ink);
+  color: #0a0b0d;
+  box-shadow: 0 0 40px -6px rgba(var(--green-rgb), 0.55);
 }
 .cta__btn {
   --h: 64px;
   padding: 0 36px;
   font-size: 17px;
   margin-top: 10px;
+  transition:
+    transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
+    box-shadow 0.5s var(--ease-out),
+    background 0.3s;
+  will-change: transform;
+}
+/* spring back with a little overshoot */
+.cta__btn.is-back {
+  transition:
+    transform 0.9s cubic-bezier(0.34, 1.8, 0.5, 1),
+    box-shadow 0.5s var(--ease-out),
+    background 0.3s;
 }
 </style>

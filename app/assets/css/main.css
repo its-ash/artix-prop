@@ -1,25 +1,41 @@
 /* ==========================================================================
    Artix Prop — design tokens & global styles
-   White canvas + blended neon (magenta → violet → cyan)
+   Black canvas, glow-framed panels, one neon accent: lime #b6f500.
+   --neon (actions) and --green (highlights) are the same hue; text on it is near-black.
    ========================================================================== */
 
 :root {
-  --bg: #ffffff;
-  --bg-soft: #f6f6fa;
-  --ink: #0b0b12;
-  --ink-2: #3b3b4a;
-  --muted: #7a7a8c;
-  --line: rgba(11, 11, 18, 0.08);
-  --line-strong: rgba(11, 11, 18, 0.14);
+  color-scheme: dark;
+  --bg: #050506;
+  --bg-soft: #0a0b0d;
+  --panel: #08090b;
+  --panel-2: #0e1013;
+  --ink: #f3f4f6;
+  --ink-2: #b3b6bf;
+  --muted: #767a86;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.13);
 
-  /* Single-colour system: one neon gold + black + white.
-     --neon-ink is the same gold, deepened so text on white stays readable. */
-  --neon-ink: #e0a000;
-  --neon: #ffb800;
-  --neon-2: #ffb800;
-  --neon-3: #ffb800;
-  --neon-soft: rgba(255, 184, 0, 0.14);
-  --neon-grad: linear-gradient(var(--neon), var(--neon));
+  /* neon lime = brand / action (near-black text on it); --neon-ink is the lime used as text on black */
+  --neon-ink: #c8ff3a;
+  --neon: #b6f500;
+  --neon-2: #c8ff3a;
+  --neon-3: #b6f500;
+  --neon-hover: #c8ff3a;
+  --on-neon: #0b1200;
+  --neon-soft: rgba(182, 245, 0, 0.16);
+  --neon-grad: linear-gradient(135deg, #d0ff4f, #9bd100);
+
+  /* same lime for highlights, pills, gains */
+  --green: #b6f500;
+  --green-rgb: 182, 245, 0; /* for rgba(var(--green-rgb), a) glows */
+  --green-2: #8fc400;
+  --green-hi: #d4ff66;
+  --on-green: #0b1200;
+  --green-soft: rgba(182, 245, 0, 0.1);
+
+  /* the lime glow that frames every panel (bright at the corners, faint white in the middle) */
+  --glow-grad: linear-gradient(120deg, #b6f500 0%, rgba(182, 245, 0, 0.14) 38%, rgba(255, 255, 255, 0.1) 62%, #d4ff66 100%);
 
   --radius: 28px;
   --radius-sm: 16px;
@@ -27,9 +43,11 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
-  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --font-body: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* Same type family as artixcapital.com */
+  --font-display: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
 }
 
 *,
@@ -44,17 +62,13 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
 body {
   margin: 0;
-  background: var(--bg);
+  /* faint blueprint grid behind everything (scrolls with the page: no fixed-background repaints) */
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px) 0 0 / 120px 120px,
+    var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -99,7 +113,7 @@ p {
 
 ::selection {
   background: var(--neon);
-  color: var(--ink);
+  color: var(--on-neon);
 }
 
 /* ---------- Layout helpers ---------- */
@@ -129,8 +143,8 @@ p {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--neon-grad);
-  box-shadow: 0 0 12px var(--neon);
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
 }
 
 .h-display {
@@ -149,11 +163,97 @@ p {
 }
 
 .grad-text {
-  /* gold text: bright neon on top, deeper gold below for legibility on white */
-  background: linear-gradient(180deg, var(--neon) 15%, var(--neon-ink) 85%);
+  /* accent words: the logo's green flag, light → deep */
+  background: linear-gradient(180deg, #e4ff9e 0%, var(--green) 55%, var(--green-2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+.red-text {
+  color: var(--neon-ink);
+}
+
+/* ---------- Glow-framed panel (the signature surface) ---------- */
+
+/* Dark rounded panel with a 1px red→green gradient rim and a soft glow of the same colours.
+   Do not put overflow:hidden on the panel itself (it would clip the glow) — clip an inner layer. */
+.glow-panel {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.glow-panel::before,
+.glow-panel::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: var(--glow-grad);
+  pointer-events: none;
+}
+/* rim: gradient masked down to a 1px ring */
+.glow-panel::before {
+  z-index: -1;
+  padding: 1px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+/* outer glow: blurred copy behind the panel */
+.glow-panel::after {
+  z-index: -2;
+  filter: blur(22px);
+  opacity: 0.38;
+}
+.glow-panel.soft::after {
+  opacity: 0.18;
+}
+
+/* tiny four-point sparkle, placed absolutely in panels */
+.sparkle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    linear-gradient(currentColor, currentColor) center / 1px 100% no-repeat,
+    linear-gradient(currentColor, currentColor) center / 100% 1px no-repeat;
+  color: rgba(255, 255, 255, 0.7);
+  animation: twinkle 4s ease-in-out infinite;
+  animation-delay: var(--tw, 0s);
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+/* bright green pill (the reference's lime tag) */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 1em;
+  padding: 0 0.42em;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d4ff66, var(--green) 60%, var(--green-2));
+  color: var(--on-green);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+    0 10px 40px -8px rgba(var(--green-rgb), 0.65);
+  vertical-align: middle;
 }
 
 /* ---------- Buttons ---------- */
@@ -184,9 +284,11 @@ p {
 }
 
 .btn-primary {
-  color: #fff;
-  background: var(--ink);
-  box-shadow: 0 10px 30px -10px rgba(255, 184, 0, 0.45);
+  color: var(--on-neon);
+  background: var(--neon-grad);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 12px 34px -10px rgba(var(--green-rgb), 0.55);
 }
 .btn-primary::before {
   content: '';
@@ -203,20 +305,23 @@ p {
   opacity: 0.85;
 }
 
-/* White pill with a neon gradient border (as in the reference) */
-.btn-ghost {
+/* Dark pill with a lime rim */
+.btn-ghost,
+.btn-ghost.on-dark {
   color: var(--ink);
   background:
-    linear-gradient(#fff, #fff) padding-box,
-    var(--neon-grad) border-box;
-  border: 1.5px solid transparent;
-  box-shadow: 0 8px 26px -12px rgba(255, 184, 0, 0.55);
+    linear-gradient(var(--panel-2), var(--panel-2)) padding-box,
+    linear-gradient(120deg, var(--neon-2), rgba(255, 255, 255, 0.18), var(--green-2)) border-box;
+  border: 1px solid transparent;
 }
-.btn-ghost.on-dark {
-  color: #fff;
-  background:
-    linear-gradient(#0b0b12, #0b0b12) padding-box,
-    var(--neon-grad) border-box;
+.btn-ghost:hover {
+  box-shadow: 0 10px 30px -12px rgba(var(--green-rgb), 0.5);
+}
+/* White pill (nav / high-contrast CTA) */
+.btn-light {
+  color: #08090b;
+  background: #fff;
+  box-shadow: 0 10px 30px -14px rgba(255, 255, 255, 0.45);
 }
 
 .btn .arrow {
@@ -230,10 +335,10 @@ p {
 
 .card {
   position: relative;
-  background: #fff;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 30px 60px -40px rgba(11, 11, 18, 0.25);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 30px 60px -40px rgba(0, 0, 0, 0.8);
 }
 
 .chip {
@@ -248,8 +353,7 @@ p {
   font-weight: 500;
   white-space: nowrap;
   color: var(--ink-2);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* ---------- Reveal (driven by v-reveal directive) ---------- */
@@ -292,9 +396,9 @@ p {
 .scroll-progress {
   position: fixed;
   inset: 0 0 auto 0;
-  height: 3px;
+  height: 2px;
   z-index: 100;
-  background: var(--neon-grad);
+  background: linear-gradient(90deg, var(--neon), var(--green));
   transform-origin: 0 50%;
   transform: scaleX(0);
   pointer-events: none;
@@ -354,6 +458,12 @@ p {
   to {
     transform: translateX(calc(-100% - var(--gap)));
   }
+}
+
+/* v-offscreen-pause: freeze endless animations while their section is out of view */
+.is-off,
+.is-off * {
+  animation-play-state: paused !important;
 }
 
 /* ---------- Background blobs ---------- */

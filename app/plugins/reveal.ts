@@ -40,6 +40,25 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
   })
 
+  /**
+   * v-offscreen-pause → adds `.is-off` while the element is out of view; main.css pauses every
+   * CSS animation inside it, so endless marquees / glows don't burn GPU off-screen.
+   */
+  let pauseIo: IntersectionObserver | null = null
+  nuxtApp.vueApp.directive<HTMLElement>('offscreen-pause', {
+    getSSRProps: () => ({}),
+    mounted(el) {
+      pauseIo ??= new IntersectionObserver(
+        (entries) => entries.forEach((e) => e.target.classList.toggle('is-off', !e.isIntersecting)),
+        { rootMargin: '200px 0px' }
+      )
+      pauseIo.observe(el)
+    },
+    unmounted(el) {
+      pauseIo?.unobserve(el)
+    }
+  })
+
   nuxtApp.vueApp.directive<HTMLElement>('inview', {
     getSSRProps: () => ({}),
     mounted(el) {

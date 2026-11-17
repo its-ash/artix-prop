@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
 /**
  * Tilted wall of dark cards. Each column is an endless vertical marquee (CSS, GPU-only),
  * alternating direction; scrolling adds a parallax offset per column on top of that.
@@ -20,36 +17,36 @@ const columns = [0, 2, 4, 1, 3].map((offset) => [...cards.slice(offset), ...card
 const speeds = [46, 38, 52, 42, 48]
 
 const root = ref<HTMLElement>()
-let ctx: gsap.Context | undefined
+const wall = ref<HTMLElement>()
+const cleanups: (() => void)[] = []
 onMounted(() => {
-  gsap.registerPlugin(ScrollTrigger)
-  ctx = gsap.context(() => {
-    gsap.utils.toArray<HTMLElement>('.cw__col').forEach((col, i) => {
-      gsap.fromTo(
-        col,
-        { y: i % 2 ? -140 : 140 },
-        { y: i % 2 ? 140 : -140, ease: 'none', scrollTrigger: { trigger: root.value, start: 'top bottom', end: 'bottom top', scrub: true } }
-      )
+  const cols = [...(wall.value?.querySelectorAll<HTMLElement>('.cw__col') ?? [])] // DOM order
+  // per-column parallax on top of the CSS marquee
+  cleanups.push(
+    scrollScene(root.value, 'top bottom', 'bottom top', (p) => {
+      cols.forEach((col, i) => {
+        const from = i % 2 ? -140 : 140
+        col.style.transform = `translate3d(0, ${lerp(from, -from, p).toFixed(2)}px, 0)`
+      })
+    }),
+    // the wall straightens as it scrolls in
+    scrollScene(root.value, 'top bottom', 'center center', (p) => {
+      if (wall.value) wall.value.style.transform = `rotate(${lerp(-22, -14, p).toFixed(3)}deg) scale(${lerp(1.35, 1.2, p).toFixed(4)})`
     })
-    gsap.fromTo(
-      '.cw__wall',
-      { rotate: -22, scale: 1.35 },
-      { rotate: -14, scale: 1.2, ease: 'none', scrollTrigger: { trigger: root.value, start: 'top bottom', end: 'center center', scrub: true } }
-    )
-  }, root.value)
+  )
 })
-onBeforeUnmount(() => ctx?.revert())
+onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
 </script>
 
 <template>
-  <section ref="root" class="cw">
+  <section ref="root" v-offscreen-pause class="cw">
     <div class="cw__head container">
       <span class="eyebrow" v-reveal>The Artix edge</span>
       <SplitText class="h-xl" text="Built for traders|who play the *long* *game.*" />
     </div>
 
     <div class="cw__viewport" aria-label="Program highlights">
-      <div class="cw__wall">
+      <div ref="wall" class="cw__wall">
         <div v-for="(col, ci) in columns" :key="ci" class="cw__col">
           <div class="cw__track" :class="{ down: ci % 2 === 1 }" :style="{ '--dur': `${speeds[ci]}s` }">
             <template v-for="dup in 2" :key="dup">
@@ -80,8 +77,8 @@ onBeforeUnmount(() => ctx?.revert())
   padding-top: clamp(96px, 12vw, 160px);
   overflow: hidden;
   background:
-    radial-gradient(60% 50% at 50% 60%, rgba(255, 184, 0, 0.18), transparent 70%),
-    linear-gradient(180deg, #fff 0%, #fdf5e1 45%, #fbefd2 70%, #fff 100%);
+    radial-gradient(40% 40% at 30% 62%, rgba(255, 255, 255, 0.06), transparent 70%),
+    radial-gradient(40% 40% at 72% 52%, rgba(var(--green-rgb), 0.16), transparent 70%);
 }
 .cw__head :deep(h2) {
   margin-top: 18px;
@@ -101,7 +98,7 @@ onBeforeUnmount(() => ctx?.revert())
   display: flex;
   gap: 22px;
   translate: -50% -50%;
-  transform: rotate(-14deg) scale(1.2); /* GSAP takes over the transform on scroll */
+  transform: rotate(-14deg) scale(1.2); /* JS takes over the transform on scroll */
   will-change: transform;
 }
 .cw__col {
@@ -146,12 +143,12 @@ onBeforeUnmount(() => ctx?.revert())
   padding: 30px 24px 18px;
   aspect-ratio: 3 / 4;
   border-radius: 30px;
-  background: #0a0a0f;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
   color: #fff;
   overflow: hidden;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 40px 60px -30px rgba(70, 45, 0, 0.45);
+    0 0 0 1px var(--line-strong) inset,
+    0 40px 60px -30px rgba(0, 0, 0, 0.8);
   transition: transform 0.6s var(--ease-out);
 }
 .cw__card:hover {
@@ -189,8 +186,11 @@ onBeforeUnmount(() => ctx?.revert())
   width: 70%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 184, 0, 0.45), transparent 65%);
-  filter: blur(18px);
+  /* soft gradient instead of a blur filter: ~60 of these move every frame */
+  background: radial-gradient(circle, rgba(var(--green-rgb), 0.3), rgba(var(--green-rgb), 0.08) 40%, transparent 70%);
+}
+.cw__card:nth-child(2n) .cw__glow {
+  background: radial-gradient(circle, rgba(var(--green-rgb), 0.36), rgba(var(--green-rgb), 0.1) 40%, transparent 70%);
 }
 @keyframes cw-bob {
   0%,

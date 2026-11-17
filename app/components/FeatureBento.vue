@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
 const root = ref<HTMLElement>()
+const chart = ref<HTMLElement>()
+const line = ref<SVGPathElement>()
+const area = ref<SVGPathElement>()
+const toasts = ref<HTMLElement>()
+const toastsIn = ref(false)
+const bars = ref<HTMLElement>()
+const ring = ref<HTMLElement>()
+const ringFill = ref<SVGCircleElement>()
 
 // deterministic equity curve
 const curve = (() => {
@@ -32,38 +37,31 @@ const onMove = (e: PointerEvent) => {
   el.style.setProperty('--my', `${e.clientY - r.top}px`)
 }
 
-let ctx: gsap.Context | undefined
+const cleanups: (() => void)[] = []
 onMounted(() => {
-  gsap.registerPlugin(ScrollTrigger)
-  ctx = gsap.context(() => {
-    gsap.fromTo(
-      '.bn__line',
-      { strokeDashoffset: 1 },
-      { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: '.bn__chart', start: 'top 85%', end: 'bottom 40%', scrub: true } }
-    )
-    gsap.from('.bn__area', { opacity: 0, scrollTrigger: { trigger: '.bn__chart', start: 'top 60%', end: 'bottom 40%', scrub: true } })
-    gsap.from('.bn__toast', {
-      x: 40,
-      opacity: 0,
-      stagger: 0.15,
-      duration: 1,
-      ease: 'expo.out',
-      scrollTrigger: { trigger: '.bn__toasts', start: 'top 85%' }
+  const barEls = [...(bars.value?.querySelectorAll<HTMLElement>('.bn__bar') ?? [])] // DOM order
+  cleanups.push(
+    // equity curve draws itself as you scroll
+    scrollScene(chart.value, 'top 85%', 'bottom 40%', (p) => {
+      line.value?.style.setProperty('stroke-dashoffset', (1 - p).toFixed(4))
+    }),
+    scrollScene(chart.value, 'top 60%', 'bottom 40%', (p) => {
+      if (area.value) area.value.style.opacity = p.toFixed(3)
+    }),
+    // payout toasts slide in once (CSS transition, staggered with --i)
+    onEnter(toasts.value, () => (toastsIn.value = true), 85),
+    // scaling bars grow one after another
+    scrollScene(bars.value, 'top 90%', 'bottom 60%', (p) => {
+      const n = barEls.length
+      barEls.forEach((b, i) => (b.style.transform = `scaleY(${staggered(p, i, n, 0.08).toFixed(4)})`))
+    }),
+    // profit-split ring fills to 90%
+    scrollScene(ring.value, 'top 90%', 'bottom 55%', (p) => {
+      ringFill.value?.style.setProperty('stroke-dashoffset', lerp(1, 0.1, p).toFixed(4))
     })
-    gsap.from('.bn__bar', {
-      scaleY: 0,
-      stagger: 0.08,
-      ease: 'none',
-      scrollTrigger: { trigger: '.bn__bars', start: 'top 90%', end: 'bottom 60%', scrub: true }
-    })
-    gsap.fromTo(
-      '.bn__ring-fill',
-      { strokeDashoffset: 1 },
-      { strokeDashoffset: 0.1, ease: 'none', scrollTrigger: { trigger: '.bn__ring', start: 'top 90%', end: 'bottom 55%', scrub: true } }
-    )
-  }, root.value)
+  )
 })
-onBeforeUnmount(() => ctx?.revert())
+onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
 </script>
 
 <template>
@@ -82,20 +80,21 @@ onBeforeUnmount(() => ctx?.revert())
             <h3>Paid in 24 hours. Every time.</h3>
             <p>Request every 14 days. Bank transfer, card or USDT — processed within one business day.</p>
           </div>
-          <div class="bn__chart">
+          <div ref="chart" class="bn__chart">
             <svg viewBox="0 0 600 220" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="bn-stroke" x1="0" x2="1">
-                  <stop offset="0" stop-color="#ffb800" />
-                  <stop offset="1" stop-color="#ffb800" />
+                  <stop offset="0" stop-color="#8fc400" />
+                  <stop offset="1" stop-color="#d9ff7a" />
                 </linearGradient>
                 <linearGradient id="bn-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#ffb800" stop-opacity=".18" />
-                  <stop offset="1" stop-color="#ffb800" stop-opacity="0" />
+                  <stop offset="0" stop-color="#b6f500" stop-opacity=".18" />
+                  <stop offset="1" stop-color="#b6f500" stop-opacity="0" />
                 </linearGradient>
               </defs>
-              <path class="bn__area" :d="curve.area" fill="url(#bn-fill)" />
+              <path ref="area" class="bn__area" :d="curve.area" fill="url(#bn-fill)" />
               <path
+                ref="line"
                 class="bn__line"
                 :d="curve.line"
                 fill="none"
@@ -106,8 +105,8 @@ onBeforeUnmount(() => ctx?.revert())
                 vector-effect="non-scaling-stroke"
               />
             </svg>
-            <div class="bn__toasts">
-              <div v-for="p in payouts" :key="p.name" class="bn__toast">
+            <div ref="toasts" class="bn__toasts" :class="{ 'is-in': toastsIn }">
+              <div v-for="(p, i) in payouts" :key="p.name" class="bn__toast" :style="{ '--i': i }">
                 <i />
                 <div>
                   <strong>{{ p.amt }}</strong> paid to {{ p.name }}
@@ -121,10 +120,11 @@ onBeforeUnmount(() => ctx?.revert())
         <!-- Split -->
         <article class="bn__card" v-reveal="100" @pointermove="onMove">
           <span class="chip">Profit split</span>
-          <div class="bn__ring">
+          <div ref="ring" class="bn__ring">
             <svg viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(11,11,18,.07)" stroke-width="10" />
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10" />
               <circle
+                ref="ringFill"
                 class="bn__ring-fill"
                 cx="60"
                 cy="60"
@@ -147,7 +147,7 @@ onBeforeUnmount(() => ctx?.revert())
         <!-- Scaling -->
         <article class="bn__card" v-reveal @pointermove="onMove">
           <span class="chip">Scaling plan</span>
-          <div class="bn__bars">
+          <div ref="bars" class="bn__bars">
             <div v-for="(s, i) in scaling" :key="s" class="bn__bar-wrap">
               <div class="bn__bar" :style="{ height: `${20 + i * 18}%` }" />
               <span>${{ s }}K</span>
@@ -204,7 +204,7 @@ onBeforeUnmount(() => ctx?.revert())
   gap: 14px;
   padding: 28px;
   border-radius: var(--radius);
-  background: #fff;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
   border: 1px solid var(--line);
   overflow: hidden;
   isolation: isolate;
@@ -218,7 +218,7 @@ onBeforeUnmount(() => ctx?.revert())
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(420px circle at var(--mx) var(--my), rgba(255, 184, 0, 0.1), rgba(255, 184, 0, 0.04) 40%, transparent 70%);
+  background: radial-gradient(420px circle at var(--mx) var(--my), rgba(var(--green-rgb), 0.1), rgba(var(--green-rgb), 0.04) 40%, transparent 70%);
   opacity: 0;
   transition: opacity 0.4s;
 }
@@ -229,7 +229,7 @@ onBeforeUnmount(() => ctx?.revert())
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  background: radial-gradient(260px circle at var(--mx) var(--my), var(--neon), rgba(255, 184, 0, 0.3) 45%, transparent 70%);
+  background: radial-gradient(260px circle at var(--mx) var(--my), var(--neon), rgba(var(--green-rgb), 0.3) 45%, transparent 70%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -239,7 +239,7 @@ onBeforeUnmount(() => ctx?.revert())
 }
 .bn__card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 40px 80px -50px rgba(255, 184, 0, 0.45);
+  box-shadow: 0 40px 80px -40px rgba(var(--green-rgb), 0.4);
 }
 .bn__card:hover::before,
 .bn__card:hover::after {
@@ -282,7 +282,14 @@ onBeforeUnmount(() => ctx?.revert())
   height: 100%;
 }
 .bn__line {
-  filter: drop-shadow(0 4px 10px rgba(255, 184, 0, 0.4));
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 4px 10px rgba(var(--green-rgb), 0.4));
+}
+.bn__area {
+  opacity: 0;
+}
+.bn__ring-fill {
+  stroke-dashoffset: 1;
 }
 .bn__toasts {
   position: absolute;
@@ -297,17 +304,26 @@ onBeforeUnmount(() => ctx?.revert())
   gap: 10px;
   padding: 10px 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--line);
-  box-shadow: 0 14px 30px -20px rgba(11, 11, 18, 0.4);
+  background: rgba(20, 22, 26, 0.94);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 14px 30px -20px rgba(0, 0, 0, 0.8);
   font-size: 13px;
+  opacity: 0;
+  transform: translate3d(40px, 0, 0);
+  transition:
+    opacity 1s var(--ease-out),
+    transform 1s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 150ms);
+}
+.bn__toasts.is-in .bn__toast {
+  opacity: 1;
+  transform: none;
 }
 .bn__toast i {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--neon-grad);
+  background: linear-gradient(135deg, var(--green-hi), var(--green-2));
   flex-shrink: 0;
 }
 .bn__toast small {
@@ -349,8 +365,10 @@ onBeforeUnmount(() => ctx?.revert())
 }
 .bn__bar {
   border-radius: 10px;
-  background: linear-gradient(180deg, var(--neon), rgba(255, 184, 0, 0.12));
+  background: linear-gradient(180deg, var(--green), rgba(var(--green-rgb), 0.1));
   transform-origin: bottom;
+  transform: scaleY(0);
+  will-change: transform;
 }
 .bn__platforms {
   display: grid;
@@ -372,19 +390,22 @@ onBeforeUnmount(() => ctx?.revert())
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  color: #fff;
-  background: var(--ink);
+  color: var(--on-green);
+  background: linear-gradient(135deg, var(--green-hi), var(--green-2));
   font-family: var(--font-display);
 }
 .bn__pf:last-child b {
-  color: var(--ink);
+  color: var(--on-neon);
   background: var(--neon-grad);
 }
 .bn__card--dark {
   grid-column: span 2;
-  background: var(--ink);
+  background:
+    radial-gradient(60% 120% at 100% 0%, rgba(var(--green-rgb), 0.18), transparent 70%),
+    radial-gradient(50% 120% at 0% 100%, rgba(var(--green-rgb), 0.16), transparent 70%),
+    var(--panel);
   color: #fff;
-  border-color: transparent;
+  border-color: var(--line-strong);
 }
 .bn__card--dark p {
   color: rgba(255, 255, 255, 0.6);
@@ -411,8 +432,8 @@ onBeforeUnmount(() => ctx?.revert())
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--neon-2);
-  box-shadow: 0 0 10px var(--neon-2);
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
 }
 @media (max-width: 960px) {
   .bn__grid {

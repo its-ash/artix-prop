@@ -2,13 +2,13 @@
 
 Marketing site for **Artix Prop**, the prop trading program of Artix Capital. Live at **https://prop.itsash.in**.
 
-It is a single-page Nuxt 4 site with WebGL hero scenes (three.js), scroll animation (GSAP ScrollTrigger + Lenis), and a prerendered homepage, so all content and SEO metadata are in the static HTML.
+It is a single-page Nuxt 4 site with WebGL hero scenes (three.js), scroll animation in plain CSS + JavaScript (GSAP only for the pinned hero), and a prerendered homepage, so all content and SEO metadata are in the static HTML.
 
 ## Stack
 
 - [Nuxt 4](https://nuxt.com): source in `app/`, built as a static site with `nuxt generate`
-- [three.js](https://threejs.org) for the black-hole hero and the mountain scene
-- [GSAP](https://gsap.com) ScrollTrigger + [Lenis](https://lenis.darkroom.engineering) for scroll animation and smooth scrolling
+- [three.js](https://threejs.org) for the orbiting-coins hero
+- Native scrolling; scroll-linked effects use a tiny rAF engine in `app/utils/motion.ts` (`scrollScene`, `tween`, `onEnter`) plus CSS transitions/keyframes
 - GitHub Pages hosting, served from the `docs/` folder on `main`
 
 ## Getting started
@@ -57,8 +57,7 @@ If the LLM can't be reached, it falls back to `Deploy YYYY-MM-DD HH:MM`.
 ```
 app/
   pages/index.vue       homepage, SEO meta and JSON-LD
-  pages/dev/            dev-only tools (stripped from production builds)
-  components/           page sections, WebGL scenes (BlackHoleCanvas, MountainScene)
+  components/           page sections, WebGL scene (CoinsCanvas)
   data/                 FAQ and challenge content (FAQ is shared with FAQPage schema)
   plugins/reveal.ts     v-reveal scroll-in directive
   assets/               CSS, imported images (hashed filenames)
@@ -79,7 +78,6 @@ Several images are rendered stills of 3D scenes rather than live WebGL, which ke
 
 | Task | Command |
 | --- | --- |
-| Re-export the mountain image | `npm run dev`, then `npm run export:mountain -- <hex> http://localhost:3000` (or use `/dev/mountain`) → `app/assets/images/mountain.webp` |
 | Re-render card icons | `npx vite tools/render --port 5199`, then `node scripts/render-assets.mjs [asset]` → `public/images/*.webp` |
 | Re-render the share card | `npm run dev`, then `npm run render:og` → `public/og/artix-prop.jpg`. Bump `?v=` on `ogImage` in `app/pages/index.vue` afterwards |
 
@@ -91,4 +89,4 @@ Several images are rendered stills of 3D scenes rather than live WebGL, which ke
 
 ## Brand
 
-A single neon gold accent: `--neon: #ffb800`, and `--neon-ink: #e0a000` for text on white. No multi-colour gradients.
+Child brand of [Artix Capital](https://artixcapital.com/): the header/footer use the parent's wordmark, the favicon is the parent's "X" mark, and the single accent is the parent's logo red — `--neon: #d6141c`, `--neon-ink: #b8111a` for text on white, white text on red fills (`--on-neon`). Green appears only inside the logo's "up" flag. Type is Geist / Geist Mono, as on artixcapital.com. No multi-colour gradients.

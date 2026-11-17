@@ -8,11 +8,11 @@
 <meta charset="utf-8" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=block" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1200px; height: 630px; overflow: hidden; background: #05050a; }
-  body { position: relative; color: #fff; font-family: 'Inter Tight', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { position: relative; color: #fff; font-family: 'Geist', sans-serif; -webkit-font-smoothing: antialiased; }
 
   .plate { position: absolute; top: 0; left: __PLATE_LEFT__px; height: 630px; width: auto; }
   /* keeps the copy readable over the accretion disk without killing the glow */
@@ -28,20 +28,21 @@
   }
 
   .copy { position: absolute; left: 72px; top: 64px; width: 640px; }
-  .logo { display: flex; align-items: center; gap: 12px; font-family: 'Space Grotesk'; font-weight: 700; letter-spacing: .04em; font-size: 24px; }
-  .logo .tag { font-family: 'JetBrains Mono'; font-size: 12px; letter-spacing: .16em; padding: 4px 8px; border-radius: 7px; color: #0b0b12; background: #ffb800; }
-  .eyebrow { margin-top: 52px; display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono'; font-size: 15px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.72); }
-  .eyebrow::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #ffb800; box-shadow: 0 0 12px #ffb800; }
-  h1 { margin-top: 18px; font-family: 'Space Grotesk'; font-weight: 600; font-size: 96px; line-height: .98; letter-spacing: -.045em; text-shadow: 0 0 50px rgba(0,0,0,.6); }
-  h1 .gold { color: #ffb800; }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo svg { height: 36px; width: auto; }
+  .logo .tag { font-family: 'Geist Mono'; font-weight: 500; font-size: 13px; letter-spacing: .16em; line-height: 1; padding: 6px 9px; border-radius: 7px; color: #0b1200; background: #b6f500; }
+  .eyebrow { margin-top: 52px; display: flex; align-items: center; gap: 12px; font-family: 'Geist Mono'; font-size: 15px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.72); }
+  .eyebrow::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #b6f500; box-shadow: 0 0 12px #b6f500; }
+  h1 { margin-top: 18px; font-family: 'Geist'; font-weight: 600; font-size: 96px; line-height: .98; letter-spacing: -.045em; text-shadow: 0 0 50px rgba(0,0,0,.6); }
+  h1 .gold { color: #b6f500; }
   .lead { margin-top: 24px; font-size: 24px; line-height: 1.35; color: rgba(255,255,255,.78); max-width: 30ch; }
 
   .stats { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr) auto; border-top: 1px solid rgba(255,255,255,.12); }
   .stat { padding: 22px 0 26px 72px; display: flex; flex-direction: column; gap: 2px; }
   .stat + .stat { padding-left: 36px; border-left: 1px solid rgba(255,255,255,.08); }
-  .stat strong { font-family: 'Space Grotesk'; font-weight: 600; font-size: 34px; letter-spacing: -.03em; }
+  .stat strong { font-family: 'Geist'; font-weight: 600; font-size: 34px; letter-spacing: -.03em; }
   .stat span { font-size: 15px; color: rgba(255,255,255,.58); }
-  .url { align-self: center; padding: 0 56px 0 24px; font-family: 'JetBrains Mono'; font-size: 15px; letter-spacing: .06em; color: #ffb800; }
+  .url { align-self: center; padding: 0 56px 0 24px; font-family: 'Geist Mono'; font-size: 15px; letter-spacing: .06em; color: #c8ff3a; }
 </style>
 </head>
 <body>
@@ -51,12 +52,26 @@
 
   <div class="copy">
     <div class="logo">
-      <svg viewBox="0 0 32 32" width="40" height="40" aria-hidden="true">
-        <rect width="32" height="32" rx="9" fill="#fff" />
-        <path d="M9 24 16 8l7 16" fill="none" stroke="#ffb800" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M12 18.5h8" stroke="#ffb800" stroke-width="3" stroke-linecap="round" />
+      <!-- Artix Capital wordmark (artixcapital.com) -->
+      <svg viewBox="10 8 1072 330" aria-hidden="true">
+        <g fill="#fff" fill-rule="evenodd">
+          <path d="M303.9,329.8V136.5c-0.1-2.7-0.5-16.1,9.6-27.6C324.8,96.2,340.4,96,342.7,96h163.5V63.8H336.1c-5.5,0.5-27.4,3.1-44.9,21.6c-15.1,16-18,34.3-18.7,40.4v204H303.9z" />
+          <path d="M526.9,15.7h33.2V256c-0.2,2.4-0.4,15.7,7.8,27c8.2,11.4,18.7,13.1,23.1,13h172.6v33.4H590.1c-8.4,0.8-25.4-0.2-43.2-16.9c-16.6-15.7-20.2-32.2-20.1-40.5V15.7z" />
+          <rect x="580.7" y="65.1" width="182.8" height="31.8" />
+          <rect x="784" y="65.8" width="32.8" height="263.9" />
+          <polygon points="1074.6,329.8 1037.7,329.8 837.3,15.7 874.3,15.7" />
+          <rect x="784.1" y="15.7" width="32.8" height="32.8" />
+          <path d="M175,298.3l0.1,31.5H75.4c-4.5,0-26.3-1.5-43.2-21.6c-11-13.1-14.4-28.1-15.6-34.7V133.1c-0.2-4.8-0.7-28.7,14.8-48.7c13.3-17.1,29.8-20.7,34.6-21.5h128.6c12.3-0.9,31.3,2,46.5,22.3c10.4,13.9,10.7,20.2,10.9,35.3v209.3h-31.5V124.2c-0.9-3.8,1.1-12.7-6.1-20c-10.4-10.6-22.1-9.5-25.4-9.5H84.4c-5.2,0.5-24.9-3.1-32.4,12c-6.4,12.8-3.4,25.4-4.2,28.1c0,39.9-0.4,80.6-0.4,120.5c0.4,4.3-1.8,16.2,6,27.3c8.6,12.4,19.9,16.4,24,15.7C109.9,298,142.4,298.5,175,298.3" />
+        </g>
+        <polygon fill="#3d5200" points="1074.6,15.7 985.7,144.5 907.8,15.7" />
+        <polygon fill="#8fc400" points="907.8,15.7 966.5,113.4 1011,83.7" />
+        <polygon fill="#6f9900" points="1074.6,15.7 994.5,15.7 1011,83.7" />
+        <polygon fill="#b6f500" points="926.2,200.9 1004.1,329.8 837.3,329.8" />
+        <polygon fill="#d9ff7a" points="1003.8,329.3 944.1,230.5 901.3,259.7" />
+        <polygon fill="#9bd100" points="918.6,329.8 901.3,259.7 837.3,329.8" />
+        <polygon fill="#5e7f00" points="944.1,230.5 871.6,280.1 911.3,222.5" />
       </svg>
-      <span>ARTIX</span><span class="tag">PROP</span>
+      <span class="tag">PROP</span>
     </div>
     <div class="eyebrow">Artix Capital · Prop Program</div>
     <h1>Get funded.<br />Up to <span class="gold">$200K.</span></h1>

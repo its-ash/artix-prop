@@ -1,6 +1,7 @@
 // Dev helper: screenshot the running site at several scroll positions through headless Chrome (CDP).
 // Usage: node scripts/shot.mjs <url> <outDir> <scrollY,...>   (Chrome must run with --remote-debugging-port=9333)
 // Viewport: VIEWPORT=390x844 node scripts/shot.mjs ...   (default 1440x900; widths < 768 emulate a phone)
+// Probe:    EVAL='document.title' node scripts/shot.mjs ...  (prints the expression's value at each position)
 import { writeFileSync, mkdirSync } from 'node:fs'
 
 const [url = 'http://localhost:3123/', out = '/tmp/artix-shots', ys = '0'] = process.argv.slice(2)
@@ -44,6 +45,11 @@ for (const y of ys.split(',').map(Number)) {
   await wait(2500)
   const { result } = await send('Page.captureScreenshot', { format: 'jpeg', quality: 70 })
   writeFileSync(`${out}/shot-${y}.jpg`, Buffer.from(result.data, 'base64'))
+  // EVAL='<js expression>' prints its value at every scroll position (debugging layout/state)
+  if (process.env.EVAL) {
+    const { result: r } = await send('Runtime.evaluate', { expression: process.env.EVAL, returnByValue: true })
+    console.log(`@${y}:`, JSON.stringify(r.result.value ?? r.result.description))
+  }
 }
 const { result: h } = await send('Runtime.evaluate', { expression: 'document.documentElement.scrollHeight' })
 console.log('scrollHeight', h.result.value)

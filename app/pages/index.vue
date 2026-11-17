@@ -9,7 +9,7 @@ const title = 'Artix Prop — Prop Trading Firm, Get Funded up to $200K'
 const description =
   'Artix Prop is the prop trading firm by Artix Capital. Pass a 1- or 2-step challenge or get instant funding up to $200K, keep up to 90% of profits, payouts in 24h.'
 // Share card (1200×630). Regenerate with `npm run render:og`; bump ?v= so platforms drop their cached copy.
-const ogImage = `${siteUrl}/og/artix-prop.jpg?v=1`
+const ogImage = `${siteUrl}/og/artix-prop.jpg?v=4`
 const ogAlt = 'Artix Prop — Get funded up to $200K. Keep up to 90% of the profits, payouts in 24 hours.'
 
 useSeoMeta({
@@ -117,9 +117,8 @@ useHead({
 
 <template>
   <main>
-    <HeroBlackHole />
+    <HeroCoins />
     <SecondHero />
-    <MountainSection />
     <CardWall />
     <ChallengeSection />
     <HowItWorks />

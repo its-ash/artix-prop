@@ -93,7 +93,7 @@ const open = ref<number | null>(0)
   transition: transform 0.5s var(--ease-out);
 }
 .open .fq__icon {
-  color: var(--ink);
+  color: var(--on-neon);
   background: var(--neon-grad);
   border-color: transparent;
   transform: rotate(180deg);

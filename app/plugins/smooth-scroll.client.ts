@@ -1,33 +1,24 @@
-import Lenis from 'lenis'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
 /**
- * Smooth (inertia) scrolling with Lenis, wired into GSAP ScrollTrigger so that
- * every scroll-driven timeline stays perfectly in sync with the smoothed scroll.
+ * Anchor scrolling with the browser's native scroller (no scroll-jacking library).
+ * Native scrolling is composited by the browser, so it stays smooth on every input device,
+ * and the scroll-linked effects in app/utils/motion.ts read it directly.
  */
 export default defineNuxtPlugin(() => {
-  gsap.registerPlugin(ScrollTrigger)
-
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  let lenis: Lenis | null = null
-
-  if (!reduceMotion) {
-    lenis = new Lenis({ lerp: 0.09, smoothWheel: true, wheelMultiplier: 1 })
-    lenis.on('scroll', ScrollTrigger.update)
-    gsap.ticker.add((time) => lenis?.raf(time * 1000))
-    gsap.ticker.lagSmoothing(0)
-  }
+  const NAV_OFFSET = 80
 
   const scrollTo = (target: string | number | HTMLElement) => {
-    if (lenis) {
-      lenis.scrollTo(target as never, { offset: -80, duration: 1.6 })
-    } else if (typeof target === 'string') {
-      document.querySelector(target)?.scrollIntoView({ behavior: 'smooth' })
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let top: number | undefined
+    if (typeof target === 'number') top = target
+    else {
+      const el = typeof target === 'string' ? document.querySelector<HTMLElement>(target) : target
+      if (el) top = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET
     }
+    if (top === undefined) return
+    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' })
   }
 
   return {
-    provide: { lenis, scrollTo }
+    provide: { scrollTo }
   }
 })

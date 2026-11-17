@@ -1,8 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- full-bleed square for maskable / apple-touch icons (OS applies its own rounding); mark kept in the 80% safe zone -->
-  <rect width="32" height="32" fill="#0b0b12"/>
-  <g transform="translate(16 16) scale(0.72) translate(-16 -16)">
-    <path d="M9 24 16 8l7 16" fill="none" stroke="#ffb800" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M12 18.5h8" stroke="#ffb800" stroke-width="3" stroke-linecap="round"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="731.5 -51.75 449 449" width="512" height="512">
+  <!-- full-bleed square for maskable / apple-touch icons (OS applies its own rounding);
+       Artix Capital "X" mark kept inside the 70% safe zone -->
+  <rect fill="#0b0c0e" x="731.5" y="-51.75" width="449" height="449"/>
+  <polygon fill="#fff" points="1074.6,329.8 1037.7,329.8 837.3,15.7 874.3,15.7"/>
+  <polygon fill="#3d5200" points="1074.6,15.7 985.7,144.5 907.8,15.7"/>
+  <polygon fill="#8fc400" points="907.8,15.7 966.5,113.4 1011,83.7"/>
+  <polygon fill="#6f9900" points="1074.6,15.7 994.5,15.7 1011,83.7"/>
+  <polygon fill="#b6f500" points="926.2,200.9 1004.1,329.8 837.3,329.8"/>
+  <polygon fill="#d9ff7a" points="1003.8,329.3 944.1,230.5 901.3,259.7"/>
+  <polygon fill="#9bd100" points="918.6,329.8 901.3,259.7 837.3,329.8"/>
+  <polygon fill="#5e7f00" points="944.1,230.5 871.6,280.1 911.3,222.5"/>
 </svg>

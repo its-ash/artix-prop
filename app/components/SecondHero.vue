@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
 const root = ref<HTMLElement>()
+const statementEl = ref<HTMLElement>()
+const blobA = ref<HTMLElement>()
+const blobB = ref<HTMLElement>()
+const nums = ref<HTMLElement[]>([])
 const statement =
   'We fund disciplined traders, not gamblers. Pass one evaluation, trade on institutional pricing and get paid in 24 hours — every single time.'
 const words = statement.split(' ')
@@ -17,48 +18,41 @@ const facts = [
 
 const symbols = ['EUR/USD', 'XAU/USD', 'NAS100', 'US500', 'BTC/USD', 'GER40', 'GBP/USD', 'USD/JPY', 'WTI', 'ETH/USD', 'XAG/USD', 'NVDA']
 
-let ctx: gsap.Context | undefined
+const cleanups: (() => void)[] = []
 onMounted(() => {
-  gsap.registerPlugin(ScrollTrigger)
-  ctx = gsap.context(() => {
+  const wordEls = [...(statementEl.value?.querySelectorAll<HTMLElement>('.sh__word') ?? [])] // DOM order
+  cleanups.push(
     // scroll-scrubbed word highlight
-    gsap.to('.sh__word', {
-      opacity: 1,
-      stagger: 0.08,
-      ease: 'none',
-      scrollTrigger: { trigger: '.sh__statement', start: 'top 80%', end: 'bottom 45%', scrub: true }
-    })
-
+    scrollScene(statementEl.value, 'top 80%', 'bottom 45%', (p) => {
+      const n = wordEls.length
+      wordEls.forEach((w, i) => (w.style.opacity = lerp(0.12, 1, staggered(p, i, n, 0.08)).toFixed(3)))
+    }),
     // parallax neon blobs
-    gsap.to('.sh__blob--a', { yPercent: -60, xPercent: 20, ease: 'none', scrollTrigger: { trigger: root.value, scrub: true } })
-    gsap.to('.sh__blob--b', { yPercent: 50, xPercent: -30, ease: 'none', scrollTrigger: { trigger: root.value, scrub: true } })
-
-    // counters
-    gsap.utils.toArray<HTMLElement>('.sh__num').forEach((el) => {
-      const to = Number(el.dataset.to)
-      const dec = Number(el.dataset.dec)
-      const obj = { v: 0 }
-      gsap.to(obj, {
-        v: to,
-        duration: 2,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: el, start: 'top 90%' },
-        onUpdate: () => (el.textContent = obj.v.toFixed(dec))
+    scrollScene(root.value, 'top bottom', 'bottom top', (p) => {
+      if (blobA.value) blobA.value.style.transform = `translate3d(${(20 * p).toFixed(2)}%, ${(-60 * p).toFixed(2)}%, 0)`
+      if (blobB.value) blobB.value.style.transform = `translate3d(${(-30 * p).toFixed(2)}%, ${(50 * p).toFixed(2)}%, 0)`
+    }),
+    // counters roll up once they enter the viewport
+    ...nums.value.map((el) =>
+      onEnter(el, () => {
+        const to = Number(el.dataset.to)
+        const dec = Number(el.dataset.dec)
+        cleanups.push(tween(2, (t) => (el.textContent = (to * t).toFixed(dec))))
       })
-    })
-  }, root.value)
+    )
+  )
 })
-onBeforeUnmount(() => ctx?.revert())
+onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
 </script>
 
 <template>
-  <section ref="root" class="sh section">
-    <div class="neon-blob sh__blob--a" />
-    <div class="neon-blob sh__blob--b" />
+  <section ref="root" v-offscreen-pause class="sh section">
+    <div ref="blobA" class="neon-blob sh__blob--a" />
+    <div ref="blobB" class="neon-blob sh__blob--b" />
 
     <div class="container">
       <span class="eyebrow" v-reveal>Why Artix Prop</span>
-      <p class="sh__statement">
+      <p ref="statementEl" class="sh__statement">
         <template v-for="(w, i) in words" :key="i"
           ><span class="sh__word" :class="{ 'grad-text': highlight.has(w.replace(/[^a-z0-9]/gi, '')) }">{{
             w
@@ -69,7 +63,7 @@ onBeforeUnmount(() => ctx?.revert())
       <div class="sh__facts">
         <div v-for="(f, i) in facts" :key="f.label" v-reveal="i * 90" class="sh__fact">
           <div class="sh__value">
-            {{ f.pre }}<span class="sh__num" :data-to="f.to" :data-dec="f.dec">{{ f.to.toFixed(f.dec) }}</span>{{ f.suf }}
+            {{ f.pre }}<span ref="nums" class="sh__num" :data-to="f.to" :data-dec="f.dec">{{ f.to.toFixed(f.dec) }}</span>{{ f.suf }}
           </div>
           <div class="sh__label">{{ f.label }}</div>
         </div>
@@ -95,15 +89,15 @@ onBeforeUnmount(() => ctx?.revert())
   left: -160px;
   top: 10%;
   background: var(--neon);
-  opacity: 0.22;
+  opacity: 0.1;
 }
 .sh__blob--b {
   width: 520px;
   height: 520px;
   right: -200px;
   bottom: 30%;
-  background: var(--neon-2);
-  opacity: 0.25;
+  background: #ffffff;
+  opacity: 0.05;
 }
 .sh__statement {
   position: relative;

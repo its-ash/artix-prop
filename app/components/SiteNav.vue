@@ -30,7 +30,7 @@ const go = (e: MouseEvent, l: { href: string; external?: boolean }) => {
 </script>
 
 <template>
-  <!-- Sticky header: always visible, solid black bar, white text. -->
+  <!-- Fixed header: transparent over the hero panel, a dark bar once the page scrolls. -->
   <header class="nav" :class="{ scrolled, open }">
     <div class="nav__inner">
       <a href="#top" class="brand" aria-label="Artix Prop home" @click.prevent="$scrollTo?.(0)"><AppLogo dark /></a>
@@ -49,7 +49,7 @@ const go = (e: MouseEvent, l: { href: string; external?: boolean }) => {
 
       <div class="nav__cta">
         <a href="#" class="login">Login</a>
-        <a href="#challenges" class="btn btn-sm nav__btn" @click.prevent="$scrollTo?.('#challenges')">Get Funded</a>
+        <a href="#challenges" class="btn btn-sm btn-light nav__btn" @click.prevent="$scrollTo?.('#challenges')">Get Funded</a>
         <button class="burger" :aria-expanded="open" aria-label="Menu" @click="open = !open">
           <span /><span />
         </button>
@@ -59,7 +59,7 @@ const go = (e: MouseEvent, l: { href: string; external?: boolean }) => {
     <Transition name="drop">
       <div v-if="open" class="mobile">
         <a v-for="l in links" :key="l.label" :href="l.href" @click="go($event, l)">{{ l.label }}</a>
-        <a href="#challenges" class="btn nav__btn" @click="go($event, { href: '#challenges' })">Get Funded →</a>
+        <a href="#challenges" class="btn btn-primary nav__btn" @click="go($event, { href: '#challenges' })">Get Funded →</a>
       </div>
     </Transition>
   </header>
@@ -81,19 +81,24 @@ const go = (e: MouseEvent, l: { href: string; external?: boolean }) => {
   margin: 0 auto;
   height: 62px;
   padding: 0 10px 0 18px;
-  border-radius: 14px;
-  background: #0b0b12;
+  border-radius: 999px;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -18px rgba(11, 11, 18, 0.55);
-  transition: box-shadow 0.4s;
+  background: rgba(8, 9, 11, 0);
+  border: 1px solid transparent;
+  transition: background 0.5s var(--ease-out), border-color 0.5s, box-shadow 0.5s;
 }
-.scrolled .nav__inner {
-  box-shadow: 0 16px 40px -20px rgba(11, 11, 18, 0.7);
+.scrolled .nav__inner,
+.open .nav__inner {
+  background: rgba(8, 9, 11, 0.86);
+  border-color: var(--line-strong);
+  box-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.9);
 }
 .nav__links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  gap: 30px;
+  gap: 34px;
   font-size: 15px;
   font-weight: 500;
 }
@@ -110,7 +115,7 @@ const go = (e: MouseEvent, l: { href: string; external?: boolean }) => {
   bottom: -6px;
   height: 2px;
   border-radius: 2px;
-  background: var(--neon);
+  background: linear-gradient(90deg, var(--neon), var(--green));
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.5s var(--ease-out);
@@ -133,21 +138,14 @@ const go = (e: MouseEvent, l: { href: string; external?: boolean }) => {
   color: #fff;
 }
 .nav__btn {
-  border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
-  color: var(--ink);
-  background: var(--neon);
-  box-shadow: 0 8px 24px -10px rgba(255, 184, 0, 0.7);
-}
-.nav__btn:hover {
-  background: #ffc933;
 }
 .burger {
   display: none;
   width: 42px;
   height: 42px;
-  border-radius: 10px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
   position: relative;
 }
@@ -177,10 +175,10 @@ const go = (e: MouseEvent, l: { href: string; external?: boolean }) => {
   gap: 4px;
   margin: 8px auto 0;
   padding: 14px;
-  border-radius: 14px;
-  background: #0b0b12;
+  border-radius: 22px;
+  background: rgba(8, 9, 11, 0.96);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line-strong);
   font-size: 17px;
   font-weight: 500;
 }

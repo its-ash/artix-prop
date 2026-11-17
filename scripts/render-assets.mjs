@@ -5,8 +5,7 @@
 // Review copies (on the site background) are written to /tmp/artix-render/*.jpg
 import { writeFileSync, mkdirSync } from 'node:fs'
 
-// The homepage mountain now comes from the live scene (npm run export:mountain); 'mountain' here is the
-// older alternative rock render and is only exported when asked for explicitly.
+// 'mountain' (an old rock render, no longer used on the site) is only exported when asked for explicitly.
 const all = ['coins', 'capsule', 'ring', 'cubes', 'planet', 'shield']
 const assets = process.argv.slice(2).length ? process.argv.slice(2) : all
 mkdirSync('public/images', { recursive: true })

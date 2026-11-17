@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
 const root = ref<HTMLElement>()
+const list = ref<HTMLElement>()
+const fill = ref<HTMLElement>()
 const active = ref(0)
 
 const steps = [
@@ -32,31 +31,16 @@ const steps = [
   }
 ]
 
-let ctx: gsap.Context | undefined
+let stop: (() => void) | undefined
 onMounted(() => {
-  gsap.registerPlugin(ScrollTrigger)
-  ctx = gsap.context(() => {
-    gsap.fromTo(
-      '.hw__bar-fill',
-      { scaleY: 0 },
-      {
-        scaleY: 1,
-        ease: 'none',
-        scrollTrigger: { trigger: '.hw__steps', start: 'top 60%', end: 'bottom 60%', scrub: true }
-      }
-    )
-    // one trigger over the whole list → robust to fast scrolling / jumps
-    ScrollTrigger.create({
-      trigger: '.hw__steps',
-      start: 'top 60%',
-      end: 'bottom 60%',
-      onUpdate: (s) => (active.value = Math.min(steps.length - 1, Math.floor(s.progress * steps.length))),
-      onLeave: () => (active.value = steps.length - 1),
-      onLeaveBack: () => (active.value = 0)
-    })
-  }, root.value)
+  // one scene over the whole list: fills the progress bar and picks the active step
+  // (robust to fast scrolling / jumps since it's derived from a clamped 0..1 progress)
+  stop = scrollScene(list.value, 'top 60%', 'bottom 60%', (p) => {
+    if (fill.value) fill.value.style.transform = `scaleY(${p.toFixed(4)})`
+    active.value = Math.min(steps.length - 1, Math.floor(p * steps.length))
+  })
 })
-onBeforeUnmount(() => ctx?.revert())
+onBeforeUnmount(() => stop?.())
 </script>
 
 <template>
@@ -70,8 +54,8 @@ onBeforeUnmount(() => ctx?.revert())
         </div>
       </div>
 
-      <div class="hw__steps">
-        <div class="hw__bar"><div class="hw__bar-fill" /></div>
+      <div ref="list" class="hw__steps">
+        <div class="hw__bar"><div ref="fill" class="hw__bar-fill" /></div>
         <article v-for="(s, i) in steps" :key="s.n" class="hw__step" :class="{ on: i <= active }">
           <span class="hw__dot" />
           <div class="hw__n">{{ s.n }}</div>
@@ -131,6 +115,8 @@ onBeforeUnmount(() => ctx?.revert())
   inset: 0;
   background: var(--neon);
   transform-origin: top;
+  transform: scaleY(0);
+  will-change: transform;
   box-shadow: 0 0 12px var(--neon);
 }
 .hw__step {
@@ -152,14 +138,14 @@ onBeforeUnmount(() => ctx?.revert())
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--bg);
   border: 2px solid var(--line-strong);
   transition: all 0.5s var(--ease-out);
 }
 .hw__step.on .hw__dot {
   border-color: transparent;
-  background: var(--neon-grad);
-  box-shadow: 0 0 0 6px rgba(255, 184, 0, 0.12), 0 0 18px var(--neon);
+  background: linear-gradient(135deg, var(--green-hi), var(--green));
+  box-shadow: 0 0 0 6px rgba(var(--green-rgb), 0.14), 0 0 18px var(--green);
 }
 .hw__n {
   font-family: var(--font-mono);

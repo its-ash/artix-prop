@@ -13,7 +13,7 @@ const rowB = reviews.slice(3)
 </script>
 
 <template>
-  <section class="ts section">
+  <section v-offscreen-pause class="ts section">
     <div class="container ts__head">
       <span class="eyebrow" v-reveal>Trader stories</span>
       <SplitText class="h-xl" text="Funded traders,|*real* results." />
@@ -40,7 +40,6 @@ const rowB = reviews.slice(3)
 <style scoped>
 .ts {
   overflow: hidden;
-  background: var(--bg-soft);
 }
 .ts__head {
   margin-bottom: 56px;
@@ -57,15 +56,15 @@ const rowB = reviews.slice(3)
   margin: 0;
   padding: 26px;
   border-radius: 24px;
-  background: #fff;
-  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--line-strong);
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 .ts__stars {
   letter-spacing: 3px;
-  background: var(--neon-grad);
+  background: linear-gradient(90deg, var(--green-hi), var(--green));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -92,7 +91,7 @@ figcaption small {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  color: var(--ink);
+  color: var(--on-neon);
   font-weight: 600;
   background: var(--neon-grad);
 }
