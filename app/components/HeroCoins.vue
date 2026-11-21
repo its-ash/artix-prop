@@ -46,6 +46,12 @@ onBeforeUnmount(() => stop?.())
       </div>
 
       <div ref="content" class="hc__content">
+        <div class="hc__kicker" v-reveal>
+          <span class="live-dot" aria-hidden="true" />
+          <span>LIVE EVALUATIONS</span>
+          <i aria-hidden="true" />
+          <span>INSTANT CREDENTIALS</span>
+        </div>
         <div class="hc__head" v-inview>
           <h1 class="hc__title" aria-label="Trade our capital, keep the profit.">
             <span class="hc__line" aria-hidden="true">
@@ -126,8 +132,29 @@ onBeforeUnmount(() => stop?.())
 .hc__content {
   position: relative;
   z-index: 2;
-  padding: clamp(36px, 5vw, 64px) clamp(22px, 4.5vw, 64px) 0;
+  padding: clamp(24px, 3.8vw, 48px) clamp(22px, 4.5vw, 64px) 0;
   will-change: transform, opacity;
+}
+.hc__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+  background: rgba(14, 16, 19, 0.72);
+  border: 1px solid rgba(var(--green-rgb), 0.25);
+  box-shadow: 0 0 24px -10px rgba(var(--green-rgb), 0.45);
+}
+.hc__kicker i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--muted);
 }
 .hc__head {
   display: grid;

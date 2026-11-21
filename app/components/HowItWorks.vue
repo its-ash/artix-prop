@@ -1,29 +1,35 @@
 <script setup lang="ts">
+import type { MascotPose } from '~/data/mascot'
+
 const root = ref<HTMLElement>()
 const list = ref<HTMLElement>()
 const fill = ref<HTMLElement>()
 const active = ref(0)
 
-const steps = [
+const steps: { n: string; title: string; text: string; tags: string[]; pose: MascotPose }[] = [
   {
+    pose: 'think',
     n: '01',
     title: 'Choose your challenge',
     text: 'Pick a model and an account size from $5K to $200K. Pay once — the fee is refunded with your first payout.',
     tags: ['2-Step', '1-Step', 'Instant']
   },
   {
+    pose: 'desk',
     n: '02',
     title: 'Hit the target, respect the rules',
     text: 'Trade forex, metals, indices, stocks and crypto with no time limit. Reach the target while staying inside your drawdown.',
     tags: ['No time limit', 'News trading', 'EAs allowed']
   },
   {
+    pose: 'funded-200k',
     n: '03',
     title: 'Get your funded account',
     text: 'Pass KYC and receive your Artix Prop account within hours. Same terminal, same rules — now with real profit share.',
     tags: ['KYC in minutes', 'nTrader', 'MT5']
   },
   {
+    pose: 'payout-24h',
     n: '04',
     title: 'Withdraw up to 90%',
     text: 'Request a payout every 14 days. We process in 24 hours to bank, card or crypto — and scale your capital as you grow.',
@@ -49,8 +55,14 @@ onBeforeUnmount(() => stop?.())
       <div class="hw__side">
         <span class="eyebrow" v-reveal>How it works</span>
         <SplitText class="h-xl" text="From sign-up|to *payout*|in four steps." />
-        <div class="hw__counter">
-          <span class="grad-text">{{ steps[active]!.n }}</span> / 04
+        <div class="hw__meta">
+          <div class="hw__counter">
+            <span class="grad-text">{{ steps[active]!.n }}</span> / 04
+          </div>
+          <!-- the bear acts out the active step (desktop only: on mobile the side isn't sticky) -->
+          <div class="hw__bear" aria-hidden="true">
+            <BearMascot v-for="(s, i) in steps" :key="s.pose" :pose="s.pose" decorative :class="{ on: i === active }" />
+          </div>
         </div>
       </div>
 
@@ -84,8 +96,15 @@ onBeforeUnmount(() => stop?.())
 .hw__side :deep(h2) {
   margin-top: 18px;
 }
+/* counter and bear share a row so the sticky column fits a 900px-tall screen */
+.hw__meta {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(16px, 3vw, 40px);
+  margin-top: 32px;
+}
 .hw__counter {
-  margin-top: 40px;
+  flex-shrink: 0;
   font-family: var(--font-mono);
   font-size: 14px;
   color: var(--muted);
@@ -96,6 +115,37 @@ onBeforeUnmount(() => stop?.())
   font-weight: 600;
   letter-spacing: -0.04em;
   margin-right: 6px;
+}
+.hw__bear {
+  position: relative;
+  width: min(230px, 26svh, 100%);
+  aspect-ratio: 1;
+}
+.hw__bear::before {
+  content: '';
+  position: absolute;
+  inset: 14% 8% 4%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--green-rgb), 0.22), rgba(var(--green-rgb), 0.04) 55%, transparent 72%);
+  pointer-events: none;
+}
+.hw__bear img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+  opacity: 0;
+  transform: translateY(18px) scale(0.94);
+  transform-origin: left bottom;
+  transition:
+    opacity 0.45s var(--ease-out),
+    transform 0.7s var(--ease-out);
+}
+.hw__bear img.on {
+  opacity: 1;
+  transform: none;
 }
 .hw__steps {
   position: relative;
@@ -175,6 +225,9 @@ onBeforeUnmount(() => stop?.())
   .hw__side {
     position: relative;
     top: 0;
+  }
+  .hw__bear {
+    display: none;
   }
 }
 </style>

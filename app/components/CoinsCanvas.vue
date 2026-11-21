@@ -14,16 +14,16 @@ import * as THREE from 'three'
 const props = withDefaults(defineProps<{ progress?: number }>(), { progress: 0 })
 const host = ref<HTMLDivElement>()
 
-// Artix Capital X mark (tools/icons/icon-maskable.svg), in SVG user units
+// Artix Capital X mark (original brand colours from artixcapital.com), in SVG user units
 const MARK: [string, string][] = [
   ['#f4f5f7', '1074.6,329.8 1037.7,329.8 837.3,15.7 874.3,15.7'],
-  ['#3d5200', '1074.6,15.7 985.7,144.5 907.8,15.7'],
-  ['#8fc400', '907.8,15.7 966.5,113.4 1011,83.7'],
-  ['#6f9900', '1074.6,15.7 994.5,15.7 1011,83.7'],
-  ['#b6f500', '926.2,200.9 1004.1,329.8 837.3,329.8'],
-  ['#d9ff7a', '1003.8,329.3 944.1,230.5 901.3,259.7'],
-  ['#9bd100', '918.6,329.8 901.3,259.7 837.3,329.8'],
-  ['#5e7f00', '944.1,230.5 871.6,280.1 911.3,222.5']
+  ['#851c23', '1074.6,15.7 985.7,144.5 907.8,15.7'],
+  ['#ec2026', '907.8,15.7 966.5,113.4 1011,83.7'],
+  ['#d71f29', '1074.6,15.7 994.5,15.7 1011,83.7'],
+  ['#47b549', '926.2,200.9 1004.1,329.8 837.3,329.8'],
+  ['#8dc582', '1003.8,329.3 944.1,230.5 901.3,259.7'],
+  ['#30a150', '918.6,329.8 901.3,259.7 837.3,329.8'],
+  ['#1b713b', '944.1,230.5 871.6,280.1 911.3,222.5']
 ]
 const MARK_PTS = MARK.map(([c, s]) => [c, s.split(' ').map((p) => p.split(',').map(Number) as [number, number])] as const)
 
@@ -146,7 +146,8 @@ function buildEnvironment(renderer: THREE.WebGLRenderer) {
   panel('#8a8f99', 0.9, 20, 20, [0, -9, 0]) // dim floor bounce
   panel('#d9dce2', 1.1, 7, 4, [0, -1, 10]) // soft frontal fill so faces never go black
   panel('#ffffff', 1.4, 3, 3, [6, 5, -8]) // white kicker behind
-  panel('#b6f500', 1.2, 3, 3, [-6, -4, -8]) // faint lime kicker behind (ties the coins to the site accent)
+  panel('#b6f500', 2.4, 4.5, 4.5, [-6, -4, -8]) // neon green kicker behind
+  panel('#d4ff66', 1.6, 5, 1.5, [7, 3, -6]) // bright neon rim accent
   const pmrem = new THREE.PMREMGenerator(renderer)
   const tex = pmrem.fromScene(env, 0.03).texture
   env.traverse((o) => {
@@ -221,6 +222,51 @@ onMounted(() => {
     return coin
   })
 
+  // Motion-graphic orbital neon green track + precision starfield particles around the carousel
+  const trackGeo = new THREE.TorusGeometry(3.4, 0.012, 12, 140)
+  trackGeo.rotateX(Math.PI / 2)
+  const trackMat = new THREE.MeshBasicMaterial({
+    color: '#b6f500',
+    transparent: true,
+    opacity: 0.42
+  })
+  const orbitalTrack = new THREE.Mesh(trackGeo, trackMat)
+  ring.add(orbitalTrack)
+
+  const outerTrackGeo = new THREE.TorusGeometry(4.05, 0.006, 8, 140)
+  outerTrackGeo.rotateX(Math.PI / 2)
+  const outerTrackMat = new THREE.MeshBasicMaterial({
+    color: '#d4ff66',
+    transparent: true,
+    opacity: 0.18
+  })
+  const outerTrack = new THREE.Mesh(outerTrackGeo, outerTrackMat)
+  ring.add(outerTrack)
+
+  // Precision neon green dust particles orbiting in the dark studio
+  const PARTICLE_COUNT = small ? 48 : 96
+  const pPos = new Float32Array(PARTICLE_COUNT * 3)
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + (i % 7) * 0.37
+    const rad = 2.2 + ((i * 73) % 100) / 100 * 3.1
+    const y = (((i * 29) % 100) / 100 - 0.5) * 2.4
+    pPos[i * 3] = Math.cos(angle) * rad
+    pPos[i * 3 + 1] = y
+    pPos[i * 3 + 2] = Math.sin(angle) * rad
+  }
+  const particlesGeo = new THREE.BufferGeometry()
+  particlesGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
+  const particlesMat = new THREE.PointsMaterial({
+    color: '#c8ff3a',
+    size: small ? 0.055 : 0.045,
+    transparent: true,
+    opacity: 0.65,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
+  const particles = new THREE.Points(particlesGeo, particlesMat)
+  ring.add(particles)
+
   // the coins ride a tilted ring (a carousel) around the vertical axis
   const N = coins.length
   let R = 3.4
@@ -267,6 +313,12 @@ onMounted(() => {
     })
     ring.rotation.set(TILT - mouse.y * 0.1 + p * 0.35, mouse.x * 0.25, mouse.x * -0.04)
     ring.position.y = 0.3 + p * 0.9
+    const trackScale = r / 3.4
+    orbitalTrack.scale.set(trackScale, 1, trackScale)
+    outerTrack.scale.set(trackScale * (1 + p * 0.1), 1, trackScale * (1 + p * 0.1))
+    outerTrack.rotation.z = Math.sin(t * 0.35) * 0.06
+    particles.rotation.y = -a * 0.45
+    particles.position.y = Math.sin(t * 0.5) * 0.08
     scene.environmentRotation.y = Math.sin(t * 0.18) * 0.35
   }
 
@@ -320,6 +372,12 @@ onMounted(() => {
     window.removeEventListener('pointermove', onMove)
     bodyGeo.dispose()
     faceGeo.dispose()
+    trackGeo.dispose()
+    trackMat.dispose()
+    outerTrackGeo.dispose()
+    outerTrackMat.dispose()
+    particlesGeo.dispose()
+    particlesMat.dispose()
     materials.forEach((m) => m.dispose())
     colorMap.dispose()
     bumpMap.dispose()

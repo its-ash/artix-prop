@@ -79,6 +79,7 @@ Several images are rendered stills of 3D scenes rather than live WebGL, which ke
 | Task | Command |
 | --- | --- |
 | Re-render card icons | `npx vite tools/render --port 5199`, then `node scripts/render-assets.mjs [asset]` → `public/images/*.webp` |
+| Re-cut the mascot poses | `node scripts/cut-mascots.mjs` (needs ImageMagick): sheets in `tools/mascot/` → `public/images/mascot/*.webp`. Copy the printed sizes into `app/data/mascot.ts` |
 | Re-render the share card | `npm run dev`, then `npm run render:og` → `public/og/artix-prop.jpg`. Bump `?v=` on `ogImage` in `app/pages/index.vue` afterwards |
 
 ### Dev helpers
@@ -90,3 +91,5 @@ Several images are rendered stills of 3D scenes rather than live WebGL, which ke
 ## Brand
 
 Child brand of [Artix Capital](https://artixcapital.com/): the header/footer use the parent's wordmark, the favicon is the parent's "X" mark, and the single accent is the parent's logo red — `--neon: #d6141c`, `--neon-ink: #b8111a` for text on white, white text on red fills (`--on-neon`). Green appears only inside the logo's "up" flag. Type is Geist / Geist Mono, as on artixcapital.com. No multi-colour gradients.
+
+The mascot is a polar bear in a black hoodie and red scarf (`<BearMascot pose="…" />`, poses listed in `app/data/mascot.ts`). It appears in How it works (one pose per step), the FAQ, the final CTA and the 404 page.

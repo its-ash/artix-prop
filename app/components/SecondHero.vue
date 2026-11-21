@@ -16,7 +16,20 @@ const facts = [
   { to: 24, dec: 0, pre: '', suf: '/5', label: 'Human support' }
 ]
 
-const symbols = ['EUR/USD', 'XAU/USD', 'NAS100', 'US500', 'BTC/USD', 'GER40', 'GBP/USD', 'USD/JPY', 'WTI', 'ETH/USD', 'XAG/USD', 'NVDA']
+const symbols = [
+  { s: 'EUR/USD', d: '+0.42%' },
+  { s: 'XAU/USD', d: '+1.18%' },
+  { s: 'NAS100', d: '+0.86%' },
+  { s: 'US500', d: '+0.54%' },
+  { s: 'BTC/USD', d: '+2.34%' },
+  { s: 'GER40', d: '+0.61%' },
+  { s: 'GBP/USD', d: '+0.29%' },
+  { s: 'USD/JPY', d: '-0.18%' },
+  { s: 'WTI', d: '+0.95%' },
+  { s: 'ETH/USD', d: '+1.72%' },
+  { s: 'XAG/USD', d: '+1.04%' },
+  { s: 'NVDA', d: '+1.89%' }
+]
 
 const cleanups: (() => void)[] = []
 onMounted(() => {
@@ -72,7 +85,11 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
 
     <div class="sh__marquee marquee" style="--speed: 50s">
       <div v-for="n in 2" :key="n" class="marquee__track" :aria-hidden="n === 2">
-        <span v-for="s in symbols" :key="s" class="sh__sym"><i />{{ s }}</span>
+        <span v-for="item in symbols" :key="item.s" class="sh__sym">
+          <i />
+          <b>{{ item.s }}</b>
+          <small :class="{ neg: item.d.startsWith('-') }">{{ item.d }}</small>
+        </span>
       </div>
     </div>
   </section>
@@ -123,13 +140,32 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
   border-top: 1px solid var(--line-strong);
 }
 .sh__fact {
+  position: relative;
   padding: 28px 24px 0 0;
+}
+.sh__fact::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 48px;
+  height: 2px;
+  background: var(--neon);
+  box-shadow: 0 0 12px var(--neon);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.9s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.sh__fact.is-in::before {
+  transform: scaleX(1);
 }
 .sh__value {
   font-family: var(--font-display);
   font-size: clamp(36px, 4.4vw, 64px);
   font-weight: 600;
   letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
 }
 .sh__label {
   margin-top: 6px;
@@ -138,25 +174,46 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
 }
 .sh__marquee {
   margin-top: clamp(72px, 9vw, 120px);
-  padding-block: 22px;
+  padding-block: 20px;
   border-block: 1px solid var(--line);
+  background: linear-gradient(90deg, transparent, rgba(var(--green-rgb), 0.03) 50%, transparent);
 }
 .sh__sym {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(14, 16, 19, 0.75);
+  border: 1px solid var(--line-strong);
   font-family: var(--font-display);
-  font-size: clamp(22px, 2.4vw, 34px);
+  font-size: clamp(16px, 1.5vw, 20px);
   font-weight: 500;
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
+.sh__sym b {
+  font-weight: 600;
+}
+.sh__sym small {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--neon-ink);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(var(--green-rgb), 0.12);
+}
+.sh__sym small.neg {
+  color: var(--ink-2);
+  background: rgba(255, 255, 255, 0.06);
+}
 .sh__sym i {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--neon-grad);
-  box-shadow: 0 0 14px var(--neon);
+  box-shadow: 0 0 12px var(--neon);
 }
 @media (max-width: 760px) {
   .sh__facts {

@@ -39,24 +39,30 @@ onBeforeUnmount(() => stop?.())
 
 <template>
   <section ref="root" v-offscreen-pause class="cta">
-    <div ref="panel" class="cta__panel">
-      <div class="cta__aurora" />
-      <div class="cta__grid" />
-      <div class="cta__inner" @pointermove="onMove" @pointerleave="onLeave">
-        <span class="eyebrow on-dark">Ready when you are</span>
-        <SplitText class="h-display" text="Your capital|is *waiting.*" />
-        <p>Start a challenge in under two minutes. Fee refunded with your first payout.</p>
-        <a ref="btn" href="#challenges" class="btn btn-primary light cta__btn" @click.prevent="$scrollTo?.('#challenges')">
-          Get Funded Now <span class="arrow">→</span>
-        </a>
+    <div class="cta__stage">
+      <div ref="panel" class="cta__panel">
+        <div class="cta__aurora" />
+        <div class="cta__grid" />
+        <div class="cta__inner" @pointermove="onMove" @pointerleave="onLeave">
+          <span class="eyebrow on-dark">Ready when you are</span>
+          <SplitText class="h-display" text="Your capital|is *waiting.*" />
+          <p>Start a challenge in under two minutes. Fee refunded with your first payout.</p>
+          <a ref="btn" href="#challenges" class="btn btn-primary light cta__btn" @click.prevent="$scrollTo?.('#challenges')">
+            Get Funded Now <span class="arrow">→</span>
+          </a>
+        </div>
       </div>
+      <BearMascot pose="peek" decorative class="cta__peek" />
     </div>
   </section>
 </template>
 
 <style scoped>
 .cta {
-  padding: 40px 12px;
+  padding: 40px 12px 64px;
+}
+.cta__stage {
+  position: relative;
 }
 .cta__panel {
   position: relative;
@@ -65,7 +71,9 @@ onBeforeUnmount(() => stop?.())
   border-radius: 32px;
   background: var(--panel);
   color: #fff;
-  box-shadow: 0 0 0 1px var(--line-strong) inset;
+  box-shadow:
+    0 0 0 1px rgba(var(--green-rgb), 0.26) inset,
+    0 1px 0 rgba(var(--green-rgb), 0.45) inset;
   min-height: 80svh;
   display: grid;
   place-items: center;
@@ -111,6 +119,34 @@ onBeforeUnmount(() => stop?.())
 .cta__inner p {
   color: rgba(255, 255, 255, 0.7);
   font-size: 18px;
+}
+/* paws grip over the outside of the card's bottom edge so the bear never floats */
+.cta__peek {
+  position: absolute;
+  right: 7%;
+  bottom: 0;
+  z-index: 2;
+  width: clamp(180px, 20vw, 290px);
+  transform-origin: 50% 88%;
+  transform: translateY(12%);
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.72));
+  transition: transform 0.6s var(--ease-out);
+}
+.cta__stage:hover .cta__peek {
+  transform: translateY(12%) scale(1.045);
+}
+@media (max-width: 760px) {
+  .cta__inner {
+    padding-bottom: 190px;
+  }
+  .cta__peek {
+    right: 50%;
+    width: 210px;
+    transform: translate(50%, 12%);
+  }
+  .cta__stage:hover .cta__peek {
+    transform: translate(50%, 12%) scale(1.03);
+  }
 }
 .btn-primary.light {
   background: #fff;

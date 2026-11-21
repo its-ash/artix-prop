@@ -5,12 +5,12 @@
  * Icons are pre-rendered stills from tools/render (public/images/*.webp).
  */
 const cards = [
-  { title: 'Up to 90% Split', text: 'Keep the lion’s share of every profitable trade you make.', img: 'coins' },
-  { title: 'Payouts in 24h', text: 'Request bi-weekly and get paid within one business day.', img: 'capsule' },
-  { title: 'Risk, Managed', text: 'Clear drawdown rules that protect you and your account.', img: 'ring' },
-  { title: 'Scale to $2M', text: '+25% capital every three profitable months.', img: 'cubes' },
-  { title: '150+ Markets', text: 'Forex, metals, indices, stocks and crypto in one account.', img: 'planet' },
-  { title: 'No Hidden Fees', text: 'One fee, refunded with your first payout. That’s it.', img: 'shield' }
+  { n: '01', title: 'Up to 90% Split', text: 'Keep the lion’s share of every profitable trade you make.', img: 'coins' },
+  { n: '02', title: 'Payouts in 24h', text: 'Request bi-weekly and get paid within one business day.', img: 'capsule' },
+  { n: '03', title: 'Risk, Managed', text: 'Clear drawdown rules that protect you and your account.', img: 'ring' },
+  { n: '04', title: 'Scale to $2M', text: '+25% capital every three profitable months.', img: 'cubes' },
+  { n: '05', title: '150+ Markets', text: 'Forex, metals, indices, stocks and crypto in one account.', img: 'planet' },
+  { n: '06', title: 'No Hidden Fees', text: 'One fee, refunded with your first payout. That’s it.', img: 'shield' }
 ]
 // each column starts at a different card so neighbours never match
 const columns = [0, 2, 4, 1, 3].map((offset) => [...cards.slice(offset), ...cards.slice(0, offset)])
@@ -56,6 +56,7 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
                 class="cw__card"
                 :aria-hidden="dup === 2 || ci > 0 ? 'true' : undefined"
               >
+                <span class="cw__idx">{{ c.n }}</span>
                 <h3>{{ c.title }}</h3>
                 <p>{{ c.text }}</p>
                 <div class="cw__art">
@@ -139,20 +140,31 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 10px;
-  padding: 30px 24px 18px;
+  gap: 8px;
+  padding: 24px 24px 18px;
   aspect-ratio: 3 / 4;
   border-radius: 30px;
   background: linear-gradient(180deg, var(--panel-2), var(--panel));
   color: #fff;
   overflow: hidden;
   box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
     0 0 0 1px var(--line-strong) inset,
     0 40px 60px -30px rgba(0, 0, 0, 0.8);
-  transition: transform 0.6s var(--ease-out);
+  transition: transform 0.6s var(--ease-out), box-shadow 0.5s var(--ease-out);
 }
 .cw__card:hover {
   transform: scale(1.03);
+  box-shadow:
+    0 0 0 1px rgba(var(--green-rgb), 0.55) inset,
+    0 30px 60px -25px rgba(var(--green-rgb), 0.35);
+}
+.cw__idx {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--neon-ink);
+  opacity: 0.85;
 }
 .cw__card h3 {
   font-size: clamp(22px, 1.8vw, 28px);
@@ -176,6 +188,7 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
   position: relative;
   width: 92%;
   height: auto;
+  filter: hue-rotate(-32deg) saturate(1.1);
   animation: cw-bob 6s ease-in-out infinite;
 }
 .cw__card:nth-child(2n) .cw__art img {

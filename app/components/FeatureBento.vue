@@ -19,7 +19,8 @@ const curve = (() => {
     pts.push([x, Math.max(20, Math.min(190, y))])
   }
   const line = pts.map(([x, yy], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${yy.toFixed(1)}`).join(' ')
-  return { line, area: `${line} L600 220 L0 220 Z` }
+  const last = pts[pts.length - 1]!
+  return { line, area: `${line} L600 220 L0 220 Z`, endX: last[0], endY: last[1] }
 })()
 
 const payouts = [
@@ -88,10 +89,15 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
                   <stop offset="1" stop-color="#d9ff7a" />
                 </linearGradient>
                 <linearGradient id="bn-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#b6f500" stop-opacity=".18" />
+                  <stop offset="0" stop-color="#b6f500" stop-opacity=".2" />
                   <stop offset="1" stop-color="#b6f500" stop-opacity="0" />
                 </linearGradient>
               </defs>
+              <g stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4 6">
+                <line x1="0" y1="55" x2="600" y2="55" />
+                <line x1="0" y1="110" x2="600" y2="110" />
+                <line x1="0" y1="165" x2="600" y2="165" />
+              </g>
               <path ref="area" class="bn__area" :d="curve.area" fill="url(#bn-fill)" />
               <path
                 ref="line"
@@ -104,6 +110,7 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
                 stroke-dasharray="1"
                 vector-effect="non-scaling-stroke"
               />
+              <circle class="bn__tip" :cx="curve.endX" :cy="curve.endY" r="5" fill="#d9ff7a" />
             </svg>
             <div ref="toasts" class="bn__toasts" :class="{ 'is-in': toastsIn }">
               <div v-for="(p, i) in payouts" :key="p.name" class="bn__toast" :style="{ '--i': i }">
@@ -287,6 +294,9 @@ onBeforeUnmount(() => cleanups.forEach((fn) => fn()))
 }
 .bn__area {
   opacity: 0;
+}
+.bn__tip {
+  filter: drop-shadow(0 0 8px rgba(var(--green-rgb), 0.9));
 }
 .bn__ring-fill {
   stroke-dashoffset: 1;

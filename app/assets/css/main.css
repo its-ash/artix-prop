@@ -1,7 +1,6 @@
 /* ==========================================================================
    Artix Prop — design tokens & global styles
-   Black canvas, glow-framed panels, one neon accent: lime #b6f500.
-   --neon (actions) and --green (highlights) are the same hue; text on it is near-black.
+   Black canvas, glow-framed panels, one neon accent: Neon Green #b6f500.
    ========================================================================== */
 
 :root {
@@ -16,7 +15,7 @@
   --line: rgba(255, 255, 255, 0.07);
   --line-strong: rgba(255, 255, 255, 0.13);
 
-  /* neon lime = brand / action (near-black text on it); --neon-ink is the lime used as text on black */
+  /* neon green = brand / action (near-black text on it); --neon-ink is bright neon green for text on black */
   --neon-ink: #c8ff3a;
   --neon: #b6f500;
   --neon-2: #c8ff3a;
@@ -26,7 +25,7 @@
   --neon-soft: rgba(182, 245, 0, 0.16);
   --neon-grad: linear-gradient(135deg, #d0ff4f, #9bd100);
 
-  /* same lime for highlights, pills, gains */
+  /* same neon green scale for highlights, pills, gains */
   --green: #b6f500;
   --green-rgb: 182, 245, 0; /* for rgba(var(--green-rgb), a) glows */
   --green-2: #8fc400;
@@ -34,7 +33,7 @@
   --on-green: #0b1200;
   --green-soft: rgba(182, 245, 0, 0.1);
 
-  /* the lime glow that frames every panel (bright at the corners, faint white in the middle) */
+  /* the neon green glow that frames every panel (bright at the corners, faint white in the middle) */
   --glow-grad: linear-gradient(120deg, #b6f500 0%, rgba(182, 245, 0, 0.14) 38%, rgba(255, 255, 255, 0.1) 62%, #d4ff66 100%);
 
   --radius: 28px;
@@ -64,10 +63,11 @@ html {
 
 body {
   margin: 0;
-  /* faint blueprint grid behind everything (scrolls with the page: no fixed-background repaints) */
+  /* faint blueprint grid + subtle top neon horizon behind everything (scrolls with the page) */
   background:
-    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px) 0 0 / 120px 120px,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px) 0 0 / 120px 120px,
+    radial-gradient(60% 420px at 50% 0%, rgba(var(--green-rgb), 0.08), transparent 72%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px) 0 0 / 120px 120px,
     var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
@@ -163,7 +163,7 @@ p {
 }
 
 .grad-text {
-  /* accent words: the logo's green flag, light → deep */
+  /* accent words: bright neon green → neon green → deep lime */
   background: linear-gradient(180deg, #e4ff9e 0%, var(--green) 55%, var(--green-2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -240,7 +240,7 @@ p {
   }
 }
 
-/* bright green pill (the reference's lime tag) */
+/* Neon green pill */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -286,8 +286,9 @@ p {
 .btn-primary {
   color: var(--on-neon);
   background: var(--neon-grad);
+  overflow: hidden;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
     0 12px 34px -10px rgba(var(--green-rgb), 0.55);
 }
 .btn-primary::before {
@@ -301,8 +302,51 @@ p {
   opacity: 0;
   transition: opacity 0.5s var(--ease-out);
 }
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.42) 50%, transparent 75%);
+  transform: translate3d(-130%, 0, 0);
+  transition: transform 0.75s var(--ease-out);
+  pointer-events: none;
+}
 .btn-primary:hover::before {
   opacity: 0.85;
+}
+.btn-primary:hover::after {
+  transform: translate3d(130%, 0, 0);
+}
+
+/* Live pulse dot utility for HUD badges & tickers */
+.live-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--neon);
+  box-shadow: 0 0 10px var(--neon);
+  flex-shrink: 0;
+}
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--neon);
+  opacity: 0;
+  animation: live-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes live-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
 }
 
 /* Dark pill with a lime rim */

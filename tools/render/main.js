@@ -106,7 +106,7 @@ function studioEnv({ neon = 5, white = 3, sky = 0.5 } = {}) {
 
 const M = {
   chromeGold: () =>
-    new THREE.MeshPhysicalMaterial({ color: '#d9ff7a', metalness: 1, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.04 }),
+    new THREE.MeshPhysicalMaterial({ color: '#c8ff3a', metalness: 1, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.04 }),
   chrome: () => new THREE.MeshPhysicalMaterial({ color: '#dcdce2', metalness: 1, roughness: 0.1 }),
   dark: () =>
     new THREE.MeshPhysicalMaterial({ color: '#141418', metalness: 0.75, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.06 }),

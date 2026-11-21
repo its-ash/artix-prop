@@ -14,6 +14,7 @@ const open = ref<number | null>(0)
           Still curious? Talk to a real person 24/5 at
           <a href="mailto:support@artixcapital.com" class="grad-text">support@artixcapital.com</a>
         </p>
+        <BearMascot v-reveal="250" pose="academy" class="fq__bear" />
       </div>
 
       <div class="fq__list">
@@ -44,6 +45,10 @@ const open = ref<number | null>(0)
   align-self: start;
   display: grid;
   gap: 22px;
+}
+.fq__bear {
+  width: min(300px, 75%);
+  margin-top: 12px;
 }
 .fq__item {
   border-bottom: 1px solid var(--line-strong);
@@ -128,6 +133,10 @@ const open = ref<number | null>(0)
   }
   .fq__a p {
     padding: 0 0 24px;
+  }
+  .fq__bear {
+    width: 200px;
+    margin-top: 0;
   }
 }
 </style>

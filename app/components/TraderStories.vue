@@ -22,7 +22,10 @@ const rowB = reviews.slice(3)
     <div v-for="(row, r) in [rowA, rowB]" :key="r" class="marquee ts__row" :class="{ reverse: r === 1 }" style="--speed: 60s">
       <div v-for="n in 2" :key="n" class="marquee__track" :aria-hidden="n === 2">
         <figure v-for="(rv, k) in [...row, ...row]" :key="k" class="ts__card">
-          <div class="ts__stars" aria-label="5 stars">★★★★★</div>
+          <div class="ts__top">
+            <div class="ts__stars" aria-label="5 stars">★★★★★</div>
+            <span class="ts__badge"><span class="live-dot" aria-hidden="true" />Verified</span>
+          </div>
           <blockquote>“{{ rv.text }}”</blockquote>
           <figcaption>
             <span class="ts__avatar">{{ rv.name[0] }}</span>
@@ -61,6 +64,31 @@ const rowB = reviews.slice(3)
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transition: border-color 0.35s var(--ease-out), transform 0.45s var(--ease-out);
+}
+.ts__card:hover {
+  border-color: rgba(var(--green-rgb), 0.4);
+  transform: translateY(-3px);
+}
+.ts__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ts__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--neon-ink);
+  background: rgba(var(--green-rgb), 0.09);
+  border: 1px solid rgba(var(--green-rgb), 0.25);
 }
 .ts__stars {
   letter-spacing: 3px;
