@@ -397,6 +397,7 @@ onBeforeUnmount(() => {
               max="20"
               step="1"
               class="ch__slider"
+              :style="{ '--p': `${((simPct - 2) / 18) * 100}%` }"
               aria-label="Simulated monthly profit percentage"
             />
             <div class="ch__sim-out">
@@ -434,7 +435,16 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Section-scoped contrast tokens: brighter secondary text, lifted card surfaces, neutral rims.
+   Rule: green rim → neutral text inside; green text → only on neutral surfaces. */
 .ch {
+  --muted: #a3a7b2;
+  --ink-2: #d0d3da;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --surface: #0f1115;
+  --surface-2: #15181d;
+  --check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.3l2.3 2.3 4.7-5' fill='none' stroke='%230b1200' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background: radial-gradient(50% 40% at 80% 60%, rgba(var(--green-rgb), 0.07), transparent 70%);
 }
 .ch__head {
@@ -465,33 +475,34 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 .ch__step-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 15px;
+  gap: 12px;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  color: var(--ink);
 }
 .ch__step-title span {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--green-hi);
-  background: var(--green-soft);
-  border: 1px solid rgba(var(--green-rgb), 0.35);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-neon);
+  background: var(--neon);
 }
 .ch__step-note {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -500,19 +511,19 @@ onBeforeUnmount(() => {
 .ch__models {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 .ch__model {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
-  padding: 18px 16px 14px;
+  gap: 10px;
+  padding: 20px 18px 16px;
   border-radius: 20px;
   text-align: left;
   color: var(--ink);
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line-strong);
   transition:
     border-color 0.25s,
@@ -521,15 +532,15 @@ onBeforeUnmount(() => {
     transform 0.3s var(--ease-out);
 }
 .ch__model:hover {
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.32);
   transform: translateY(-2px);
 }
 .ch__model.active {
   border-color: var(--green);
-  background: linear-gradient(180deg, rgba(var(--green-rgb), 0.14), var(--panel) 72%);
+  background: linear-gradient(180deg, #181c15, var(--surface) 72%);
   box-shadow:
     0 0 0 1px var(--green) inset,
-    0 24px 42px -28px rgba(var(--green-rgb), 0.72);
+    0 24px 42px -28px rgba(var(--green-rgb), 0.6);
 }
 .ch__model:focus-visible,
 .ch__size:focus-visible,
@@ -546,15 +557,15 @@ onBeforeUnmount(() => {
 }
 .ch__radio {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 1.5px solid var(--line-strong);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
   transition: all 0.25s;
 }
 .active .ch__radio {
   border-color: var(--green);
-  background: radial-gradient(circle, var(--green) 0 42%, transparent 46%);
+  background: var(--check) center / 13px no-repeat var(--green);
 }
 .ch__badge {
   position: absolute;
@@ -568,15 +579,17 @@ onBeforeUnmount(() => {
   border-radius: 99px;
   color: var(--on-neon);
   background: var(--neon-grad);
-  box-shadow: 0 4px 14px -4px rgba(var(--green-rgb), 0.7);
+  box-shadow:
+    0 0 0 3px var(--bg),
+    0 4px 14px -4px rgba(var(--green-rgb), 0.7);
 }
 .ch__model-name {
-  font-size: 17px;
+  font-size: 18px;
   letter-spacing: -0.02em;
 }
 .ch__model-tag {
-  font-size: 12.5px;
-  line-height: 1.38;
+  font-size: 14px;
+  line-height: 1.42;
   color: var(--muted);
 }
 .ch__model-pills {
@@ -586,18 +599,17 @@ onBeforeUnmount(() => {
   margin-top: 2px;
 }
 .ch__model-pills span {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  padding: 3px 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 4px 9px;
   border-radius: 8px;
-  color: var(--ink-2);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--line);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.07);
+  font-variant-numeric: tabular-nums;
 }
 .ch__model.active .ch__model-pills span {
-  color: var(--green-hi);
-  background: rgba(var(--green-rgb), 0.1);
-  border-color: rgba(var(--green-rgb), 0.26);
+  background: rgba(255, 255, 255, 0.1);
 }
 .ch__model-foot {
   display: flex;
@@ -605,22 +617,23 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 8px;
   margin-top: auto;
-  padding-top: 10px;
+  padding-top: 12px;
   border-top: 1px solid var(--line);
 }
 .ch__model-meta {
-  font-size: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--ink-2);
   white-space: nowrap;
 }
 .ch__model-from {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   white-space: nowrap;
 }
 .ch__model-from b {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 21px;
   color: var(--ink);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
@@ -638,54 +651,68 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 13px 6px 11px;
+  gap: 3px;
+  padding: 15px 6px 13px;
   border-radius: 16px;
   color: var(--ink);
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--line-strong);
   transition:
     border-color 0.25s,
     background 0.25s,
+    color 0.25s,
+    box-shadow 0.25s,
     transform 0.25s var(--ease-out);
 }
 .ch__size:hover {
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.32);
   transform: translateY(-2px);
 }
 .ch__size strong {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 19px;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 .ch__size small {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   transition: color 0.25s;
 }
+/* Selected size = solid neon tile with dark text (max contrast, no green-on-green) */
 .ch__size.active {
-  border-color: var(--green);
-  background: var(--green-soft);
-  box-shadow: 0 0 0 1px var(--green) inset;
+  color: var(--on-neon);
+  border-color: var(--neon);
+  background: var(--neon-grad);
+  box-shadow: 0 14px 30px -16px rgba(var(--green-rgb), 0.8);
+}
+.ch__size.active:hover {
+  border-color: var(--neon);
 }
 .ch__size.active small {
-  color: var(--green-hi);
+  font-weight: 600;
+  color: rgba(11, 18, 0, 0.72);
 }
 .ch__size-pop {
   position: absolute;
-  top: -8px;
-  padding: 1px 7px;
+  top: -9px;
+  padding: 2px 8px;
   border-radius: 99px;
   font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 600;
+  font-size: 9.5px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--on-neon);
   background: var(--neon);
+  box-shadow: 0 0 0 3px var(--bg);
+}
+.ch__size.active .ch__size-pop {
+  color: var(--neon-ink);
+  background: #0b1200;
+  box-shadow: 0 0 0 1px var(--neon);
 }
 
 .ch__platforms {
@@ -698,19 +725,20 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 13px 16px;
   border-radius: 16px;
   text-align: left;
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--line-strong);
-  transition: border-color 0.25s, background 0.25s;
+  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
 }
 .ch__plat:hover {
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.32);
 }
 .ch__plat.active {
-  border-color: rgba(var(--green-rgb), 0.65);
-  background: rgba(var(--green-rgb), 0.08);
+  border-color: var(--green);
+  background: #151912;
+  box-shadow: 0 0 0 1px var(--green) inset;
 }
 .ch__plat-ico {
   display: grid;
@@ -731,11 +759,11 @@ onBeforeUnmount(() => {
   margin-right: auto;
 }
 .ch__plat-body strong {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink);
 }
 .ch__plat-body small {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 
@@ -743,22 +771,30 @@ onBeforeUnmount(() => {
 .ch__roadmap {
   display: grid;
   grid-template-columns: repeat(var(--steps), minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 .ch__road {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
+  gap: 8px;
+  padding: 16px 18px;
+  overflow: hidden;
   border-radius: 18px;
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line-strong);
 }
+/* Funded: neutral rim + neon top bar, so the green headline never sits on a green outline */
 .ch__road.funded {
-  border-color: rgba(var(--green-rgb), 0.42);
-  background: linear-gradient(180deg, rgba(var(--green-rgb), 0.1), var(--panel));
+  background: linear-gradient(180deg, #161a12, var(--surface));
+}
+.ch__road.funded::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--neon-grad);
 }
 .ch__road-top {
   display: flex;
@@ -767,20 +803,27 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 .ch__road-badge {
+  padding: 3px 8px;
+  border-radius: 99px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--neon-ink);
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+.ch__road.funded .ch__road-badge {
+  color: var(--on-neon);
+  background: var(--neon);
 }
 .ch__road-phase {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
+  font-size: 12px;
+  color: var(--ink-2);
 }
 .ch__road-goal {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 23px;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
@@ -789,15 +832,17 @@ onBeforeUnmount(() => {
   color: var(--green-hi);
 }
 .ch__road-sub {
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 13.5px;
+  line-height: 1.45;
   color: var(--muted);
 }
 
 /* Rules Card */
 .ch__rules {
-  padding: 14px 20px;
+  padding: 16px 22px;
   border-radius: 20px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border-color: var(--line-strong);
 }
 .ch__phase-tabs {
   display: none;
@@ -809,44 +854,52 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: minmax(150px, 1.35fr) repeat(var(--cols), minmax(0, 1fr));
   align-items: center;
-  gap: 4px 12px;
-  padding: 10px 8px;
-  margin-inline: -8px;
+  gap: 4px 14px;
+  padding: 12px 10px;
+  margin-inline: -10px;
   border-radius: 10px;
-  border-top: 1px solid var(--line);
-  font-size: 14px;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
   transition: background 0.2s var(--ease-out);
 }
+/* Zebra rows: easy to track a rule across all phase columns */
+.ch__row:nth-child(odd):not(.ch__row--head) {
+  background: rgba(255, 255, 255, 0.035);
+}
 .ch__row:not(.ch__row--head):hover {
-  background: rgba(var(--green-rgb), 0.045);
+  background: rgba(255, 255, 255, 0.07);
 }
 .ch__row--head {
-  padding-top: 2px;
-  padding-bottom: 10px;
-  border-top: 0;
+  padding-top: 4px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line-strong);
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-2);
 }
 .ch__rule-label {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  color: var(--ink-2);
+  gap: 2px;
+  font-weight: 500;
+  color: var(--ink);
 }
 .ch__rule-label em {
   font-style: normal;
-  font-size: 11.5px;
+  font-weight: 400;
+  font-size: 12.5px;
   color: var(--muted);
 }
 .ch__cell {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  gap: 4px 8px;
 }
 .ch__cell strong {
   font-weight: 600;
@@ -854,9 +907,9 @@ onBeforeUnmount(() => {
 }
 .ch__cell small {
   font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--neon-ink);
-  opacity: 0.85;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--green-hi);
 }
 
 .swap-enter-active,
@@ -893,21 +946,23 @@ onBeforeUnmount(() => {
 }
 .ch__sum-kicker {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
 }
 .ch__sum-head h3 {
-  font-size: 21px;
+  font-size: 22px;
 }
 .ch__sum-chip {
   flex-shrink: 0;
-  border-color: rgba(var(--green-rgb), 0.35);
-  color: var(--green-hi);
-  background: rgba(var(--green-rgb), 0.08);
+  height: 30px;
+  font-size: 13px;
+  border-color: var(--line-strong);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.07);
 }
 .ch__amount {
   font-family: var(--font-display);
@@ -924,9 +979,9 @@ onBeforeUnmount(() => {
   opacity: 0.6;
 }
 .ch__price p {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--muted);
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--ink-2);
 }
 .ch__price b {
   color: var(--green-hi);
@@ -948,13 +1003,13 @@ onBeforeUnmount(() => {
   border-left: 0;
 }
 .ch__facts dt {
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--muted);
 }
 .ch__facts dd {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
@@ -964,23 +1019,23 @@ onBeforeUnmount(() => {
 .ch__sim {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 16px 18px;
   border-radius: 16px;
-  background: rgba(var(--green-rgb), 0.07);
-  border: 1px solid rgba(var(--green-rgb), 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line-strong);
 }
 .ch__sim-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--ink-2);
 }
 .ch__sim-top strong {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
@@ -990,7 +1045,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(90deg, var(--neon) var(--p), rgba(255, 255, 255, 0.16) var(--p));
   outline: none;
   cursor: pointer;
 }
@@ -1021,14 +1076,14 @@ onBeforeUnmount(() => {
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(var(--green-rgb), 0.2);
-  font-size: 13px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
   color: var(--ink-2);
 }
 .ch__sim-out strong {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 26px;
   letter-spacing: -0.03em;
   color: var(--green-hi);
   font-variant-numeric: tabular-nums;
@@ -1048,8 +1103,8 @@ onBeforeUnmount(() => {
   margin: -4px 0 0;
   padding: 0;
   list-style: none;
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 13px;
+  color: var(--ink-2);
 }
 .ch__trust li::before {
   content: '✓ ';
@@ -1181,9 +1236,9 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 12px 0;
+    padding: 13px 0;
     border-top: 1px solid var(--line);
-    font-size: 14px;
+    font-size: 15px;
   }
   .ch__m-row:first-child {
     border-top: 0;
@@ -1201,8 +1256,8 @@ onBeforeUnmount(() => {
   }
   .ch__m-val small {
     font-family: var(--font-mono);
-    font-size: 11.5px;
-    color: var(--neon-ink);
+    font-size: 13px;
+    color: var(--green-hi);
   }
   .ch__summary {
     padding: 20px;

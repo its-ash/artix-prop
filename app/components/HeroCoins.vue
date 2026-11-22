@@ -121,10 +121,12 @@ onBeforeUnmount(() => stop?.())
     radial-gradient(40% 30% at 50% 78%, rgba(255, 255, 255, 0.05), transparent 70%);
 }
 
+/* full viewport width: break out of the 1480px panel so coins enter/leave at the window edges */
 .hc__coins {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
   top: 30%;
   bottom: 10px;
 }

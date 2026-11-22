@@ -1,123 +1,34 @@
 <script setup lang="ts">
 import * as THREE from 'three'
+import { COINS, drawCoinFace as drawFace, type Coin } from '~/utils/cryptoCoins'
 
 /**
- * A row of minted Artix coins that flip about their vertical axis in a staggered wave.
- *
- * - Body: a lathe-turned profile (raised rim, bevel, recessed field) with a reeded edge displaced
- *   straight into the geometry.
- * - Faces: a canvas-drawn die (Artix X mark in enamel + engraved ring text) used as colour, bump and
- *   metal/roughness maps.
- * - Look: polished gold reflecting a dark studio lit by warm softboxes, with a faint lime kicker
- *   from behind so the edges pick up the site accent.
+ * Arch of minted crypto coins that glides left → right in an endless loop.
+ * Coins ride a large circle whose centre sits below the canvas, so only the top arc shows.
+ * Each coin is yawed three-quarter to the camera (reeded edge visible) and rolled to follow the arc.
+ * Faces are canvas-drawn dies: coloured enamel field + raised symbol (colour, bump and roughness maps).
  */
 const props = withDefaults(defineProps<{ progress?: number }>(), { progress: 0 })
 const host = ref<HTMLDivElement>()
 
-// Artix Capital X mark (original brand colours from artixcapital.com), in SVG user units
-const MARK: [string, string][] = [
-  ['#f4f5f7', '1074.6,329.8 1037.7,329.8 837.3,15.7 874.3,15.7'],
-  ['#851c23', '1074.6,15.7 985.7,144.5 907.8,15.7'],
-  ['#ec2026', '907.8,15.7 966.5,113.4 1011,83.7'],
-  ['#d71f29', '1074.6,15.7 994.5,15.7 1011,83.7'],
-  ['#47b549', '926.2,200.9 1004.1,329.8 837.3,329.8'],
-  ['#8dc582', '1003.8,329.3 944.1,230.5 901.3,259.7'],
-  ['#30a150', '918.6,329.8 901.3,259.7 837.3,329.8'],
-  ['#1b713b', '944.1,230.5 871.6,280.1 911.3,222.5']
-]
-const MARK_PTS = MARK.map(([c, s]) => [c, s.split(' ').map((p) => p.split(',').map(Number) as [number, number])] as const)
-
-/** Draws one face die. mode: 'color' | 'bump' | 'pbr' (G = roughness, B = metalness). */
-function drawFace(size: number, mode: 'color' | 'bump' | 'pbr') {
-  const c = document.createElement('canvas')
-  c.width = c.height = size
-  const g = c.getContext('2d')!
-  const S = size / 1024
-  g.scale(S, S)
-
-  const field = { color: '#c9ccd3', bump: '#808080', pbr: 'rgb(0, 82, 255)' }[mode]
-  const raised = { color: '#e9ebef', bump: '#ffffff', pbr: 'rgb(0, 40, 255)' }[mode]
-  g.fillStyle = field
-  g.fillRect(0, 0, 1024, 1024)
-
-  // fine concentric lathe lines (polished/brushed rings) on the field
-  if (mode !== 'color') {
-    for (let r = 30; r < 512; r += 6) {
-      g.strokeStyle = mode === 'bump' ? `rgba(${r % 12 ? 120 : 136},${r % 12 ? 120 : 136},${r % 12 ? 120 : 136},0.6)` : `rgba(0,${r % 12 ? 70 : 96},255,0.7)`
-      g.lineWidth = 2
-      g.beginPath()
-      g.arc(512, 512, r, 0, Math.PI * 2)
-      g.stroke()
-    }
-  }
-
-  // two engraved border rings
-  g.strokeStyle = raised
-  g.lineWidth = 6
-  for (const r of [492, 396]) {
-    g.beginPath()
-    g.arc(512, 512, r, 0, Math.PI * 2)
-    g.stroke()
-  }
-
-  // ring legend
-  g.fillStyle = raised
-  g.font = '600 46px Geist, ui-sans-serif, system-ui, sans-serif'
-  g.textAlign = 'center'
-  g.textBaseline = 'middle'
-  const legend = 'ARTIX PROP  •  FUNDED TRADER  •  ARTIX PROP  •  FUNDED TRADER  •  '
-  const step = (Math.PI * 2) / legend.length
-  for (let i = 0; i < legend.length; i++) {
-    const a = i * step - Math.PI / 2
-    g.save()
-    g.translate(512 + Math.cos(a) * 444, 512 + Math.sin(a) * 444)
-    g.rotate(a + Math.PI / 2)
-    g.fillText(legend[i]!, 0, 0)
-    g.restore()
-  }
-
-  // the X mark, centred and scaled into the inner field
-  const s = 560 / 314
-  g.save()
-  g.translate(512, 512)
-  g.scale(s, s)
-  g.translate(-956, -172.75)
-  if (mode === 'bump') g.filter = `blur(${1.2 / s}px)` // soft bevel on the raised enamel
-  for (const [col, pts] of MARK_PTS) {
-    g.fillStyle = mode === 'color' ? col : mode === 'bump' ? '#ffffff' : 'rgb(0, 110, 50)' // enamel: a bit rougher, not metal
-    g.beginPath()
-    pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)))
-    g.closePath()
-    g.fill()
-  }
-  g.restore()
-
-  const tex = new THREE.CanvasTexture(c)
-  tex.anisotropy = 8
-  if (mode === 'color') tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
-
 /** Coin body: rim + bevel + reeded edge, turned on a lathe. Axis = Z, faces at z = ±FACE_Z. */
-const FACE_R = 0.8
-const FACE_Z = 0.058
+const FACE_R = 0.82
+const FACE_Z = 0.07
 function buildBody() {
   const v = (x: number, y: number) => new THREE.Vector2(x, y)
-  // bottom → top (keeps lathe normals pointing outwards); repeated points = crisp creases
   const profile = [
-    v(FACE_R, -FACE_Z), v(0.83, -0.098), v(0.83, -0.098), v(0.955, -0.098), v(0.955, -0.098),
-    v(1, -0.07), v(1, -0.07), v(1, 0.07), v(1, 0.07), v(0.955, 0.098), v(0.955, 0.098),
-    v(0.83, 0.098), v(0.83, 0.098), v(FACE_R, FACE_Z)
+    v(FACE_R, -FACE_Z), v(0.86, -0.12), v(0.86, -0.12), v(0.96, -0.12), v(0.96, -0.12),
+    v(1, -0.09), v(1, -0.09), v(1, 0.09), v(1, 0.09), v(0.96, 0.12), v(0.96, 0.12),
+    v(0.86, 0.12), v(0.86, 0.12), v(FACE_R, FACE_Z)
   ]
-  const geo = new THREE.LatheGeometry(profile, 360)
-  // reeded edge: radial grooves on the outer band
+  const geo = new THREE.LatheGeometry(profile, 220)
   const pos = geo.attributes.position as THREE.BufferAttribute
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i)
     const z = pos.getZ(i)
     const r = Math.hypot(x, z)
     if (r < 0.999) continue
-    const k = 1 - 0.016 * (0.5 + 0.5 * Math.cos(Math.atan2(x, z) * 100))
+    const k = 1 - 0.018 * (0.5 + 0.5 * Math.cos(Math.atan2(x, z) * 110))
     pos.setX(i, x * k)
     pos.setZ(i, z * k)
   }
@@ -126,7 +37,7 @@ function buildBody() {
   return geo
 }
 
-/** Dark studio: warm softboxes (they make the gold read rich), white strips top/front, a faint lime kicker. */
+/** Dark studio with white softboxes, so every coin colour reads true and glossy. */
 function buildEnvironment(renderer: THREE.WebGLRenderer) {
   const env = new THREE.Scene()
   env.background = new THREE.Color('#040405')
@@ -139,15 +50,13 @@ function buildEnvironment(renderer: THREE.WebGLRenderer) {
     m.lookAt(0, 0, 0)
     env.add(m)
   }
-  panel('#ffe2a8', 4.2, 6, 10, [-9, 1, 3]) // warm softbox
-  panel('#fff4dc', 3, 6, 10, [9, 0, 3]) // warm-white softbox
-  panel('#ffffff', 3.2, 12, 0.7, [0, 6, 7]) // white strip, top-front → crisp face highlight
-  panel('#ffffff', 1.4, 0.6, 9, [3, 0, 9]) // vertical white strip → edge glint mid-flip
-  panel('#8a8f99', 0.9, 20, 20, [0, -9, 0]) // dim floor bounce
-  panel('#d9dce2', 1.1, 7, 4, [0, -1, 10]) // soft frontal fill so faces never go black
-  panel('#ffffff', 1.4, 3, 3, [6, 5, -8]) // white kicker behind
-  panel('#b6f500', 2.4, 4.5, 4.5, [-6, -4, -8]) // neon green kicker behind
-  panel('#d4ff66', 1.6, 5, 1.5, [7, 3, -6]) // bright neon rim accent
+  panel('#ffffff', 3.4, 6, 10, [-9, 2, 4])
+  panel('#fff6e6', 2.6, 6, 10, [9, 0, 4])
+  panel('#ffffff', 3.4, 14, 0.8, [0, 7, 7])
+  panel('#ffffff', 1.6, 0.6, 9, [3, 0, 9])
+  panel('#8a8f99', 0.8, 20, 20, [0, -9, 0])
+  panel('#dfe2e8', 1.3, 8, 4, [0, -1, 10])
+  panel('#f5b800', 1.4, 4, 4, [-6, -4, -8])
   const pmrem = new THREE.PMREMGenerator(renderer)
   const tex = pmrem.fromScene(env, 0.03).texture
   env.traverse((o) => {
@@ -164,12 +73,10 @@ onMounted(() => {
   const el = host.value!
   const small = window.innerWidth < 768
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
-  // the canvas spans the whole viewport, so pixel count dominates the cost: cap the ratio,
-  // and drop it further at runtime if frames run slow (see loop)
   let dpr = Math.min(window.devicePixelRatio, 1.5)
   renderer.setPixelRatio(dpr)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.05
+  renderer.toneMappingExposure = 0.95
   renderer.setClearColor(0x000000, 0)
   el.appendChild(renderer.domElement)
 
@@ -177,109 +84,83 @@ onMounted(() => {
   const envTex = buildEnvironment(renderer)
   scene.environment = envTex
 
-  const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 100)
-  const key = new THREE.DirectionalLight('#ffffff', 1.2)
-  key.position.set(-2, 4, 6)
+  const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 200)
+  const key = new THREE.DirectionalLight('#ffffff', 1.3)
+  key.position.set(-3, 5, 7)
   scene.add(key)
 
-  const texSize = small ? 512 : 1024
-  const colorMap = drawFace(texSize, 'color')
-  const bumpMap = drawFace(texSize, 'bump')
-  const pbrMap = drawFace(texSize, 'pbr')
-
+  const texSize = small ? 256 : 512
   const bodyGeo = buildBody()
-  const faceGeo = new THREE.CircleGeometry(FACE_R, 96)
+  const faceGeo = new THREE.CircleGeometry(FACE_R, 80)
+  const disposables: { dispose: () => void }[] = [bodyGeo, faceGeo]
 
-  // per-coin tint of the metal: three shades of gold alternating around the ring
-  const tints = ['#ffd36e', '#f0b94d', '#ffe09a', '#ffd36e', '#f0b94d', '#ffe09a']
-  const ring = new THREE.Group()
-  scene.add(ring)
-  // plain metal + clearcoat: iridescence added a costly extra shader pass for little visible gain
-  const shared = { metalness: 1, clearcoat: 0.6, clearcoatRoughness: 0.12, envMapIntensity: 1.3 }
-  const materials: THREE.Material[] = []
-  const coins = tints.map((tint, i) => {
-    const bodyMat = new THREE.MeshPhysicalMaterial({ ...shared, color: tint, roughness: 0.2 })
-    const faceMat = new THREE.MeshPhysicalMaterial({
-      ...shared,
-      color: tint,
-      roughness: 1,
-      map: colorMap,
-      bumpMap,
-      bumpScale: 2.2,
-      roughnessMap: pbrMap,
-      metalnessMap: pbrMap
-    })
-    materials.push(bodyMat, faceMat)
+  const arch = new THREE.Group()
+  scene.add(arch)
+
+  const COUNT = 30 // the 16 designs cycle around the ring
+  const COIN_SCALE = 0.7
+  const cache = new Map<string, THREE.Material[]>()
+  const coins = Array.from({ length: COUNT }, (_, i) => COINS[i % COINS.length]!).map((def) => {
+    const hit = cache.get(def.id)
+    const [bodyMat, faceMat] = hit ?? makeMats(def)
+    if (!hit) cache.set(def.id, [bodyMat!, faceMat!])
     const coin = new THREE.Group()
+    coin.scale.setScalar(COIN_SCALE)
     const front = new THREE.Mesh(faceGeo, faceMat)
     front.position.z = FACE_Z
     const back = new THREE.Mesh(faceGeo, faceMat)
     back.position.z = -FACE_Z
     back.rotation.y = Math.PI
     coin.add(new THREE.Mesh(bodyGeo, bodyMat), front, back)
-    coin.userData.i = i
-    ring.add(coin)
-    return coin
+    const slot = new THREE.Group()
+    slot.add(coin)
+    arch.add(slot)
+    return { slot, coin }
   })
 
-  // Motion-graphic orbital neon green track + precision starfield particles around the carousel
-  const trackGeo = new THREE.TorusGeometry(3.4, 0.012, 12, 140)
-  trackGeo.rotateX(Math.PI / 2)
-  const trackMat = new THREE.MeshBasicMaterial({
-    color: '#b6f500',
-    transparent: true,
-    opacity: 0.42
-  })
-  const orbitalTrack = new THREE.Mesh(trackGeo, trackMat)
-  ring.add(orbitalTrack)
-
-  const outerTrackGeo = new THREE.TorusGeometry(4.05, 0.006, 8, 140)
-  outerTrackGeo.rotateX(Math.PI / 2)
-  const outerTrackMat = new THREE.MeshBasicMaterial({
-    color: '#d4ff66',
-    transparent: true,
-    opacity: 0.18
-  })
-  const outerTrack = new THREE.Mesh(outerTrackGeo, outerTrackMat)
-  ring.add(outerTrack)
-
-  // Precision neon green dust particles orbiting in the dark studio
-  const PARTICLE_COUNT = small ? 48 : 96
-  const pPos = new Float32Array(PARTICLE_COUNT * 3)
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + (i % 7) * 0.37
-    const rad = 2.2 + ((i * 73) % 100) / 100 * 3.1
-    const y = (((i * 29) % 100) / 100 - 0.5) * 2.4
-    pPos[i * 3] = Math.cos(angle) * rad
-    pPos[i * 3 + 1] = y
-    pPos[i * 3 + 2] = Math.sin(angle) * rad
+  function makeMats(def: Coin): THREE.Material[] {
+    const colorMap = drawFace(def, texSize, 'color')
+    const bumpMap = drawFace(def, texSize, 'bump')
+    const pbrMap = drawFace(def, texSize, 'pbr')
+    const bodyMat = new THREE.MeshPhysicalMaterial({
+      color: def.body,
+      metalness: def.metal,
+      roughness: 0.26,
+      clearcoat: 0.7,
+      clearcoatRoughness: 0.12,
+      envMapIntensity: 0.95
+    })
+    const faceMat = new THREE.MeshPhysicalMaterial({
+      color: '#ffffff',
+      metalness: 1,
+      roughness: 1,
+      map: colorMap,
+      bumpMap,
+      bumpScale: 2.4,
+      roughnessMap: pbrMap,
+      metalnessMap: pbrMap,
+      clearcoat: 0.7,
+      clearcoatRoughness: 0.12,
+      envMapIntensity: 0.95
+    })
+    disposables.push(colorMap, bumpMap, pbrMap, bodyMat, faceMat)
+    return [bodyMat, faceMat]
   }
-  const particlesGeo = new THREE.BufferGeometry()
-  particlesGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
-  const particlesMat = new THREE.PointsMaterial({
-    color: '#c8ff3a',
-    size: small ? 0.055 : 0.045,
-    transparent: true,
-    opacity: 0.65,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  })
-  const particles = new THREE.Points(particlesGeo, particlesMat)
-  ring.add(particles)
 
-  // the coins ride a tilted ring (a carousel) around the vertical axis
   const N = coins.length
-  let R = 3.4
-  const TILT = 0.26
+  const STEP = (Math.PI * 2) / N
+  const R = 7.6
+  let cy = -4
+  const YAW = -0.62 // three-quarter turn so the reeded edge shows, like the reference
   const fit = (w: number, h: number) => {
     const aspect = w / h
-    R = aspect < 1.3 ? 2.5 : 3.4
     camera.aspect = aspect
     const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-    const halfW = R + 1.25
-    const halfH = R * Math.sin(TILT) + 1.6
-    // keep the camera well back so the front coin isn't blown up by perspective; pad for its nearer depth
-    camera.position.z = Math.max(halfW / (tan * aspect), halfH / tan, R * 2.8) + R * 0.35
+    // half-width inside R so the arc runs off the left and right window edges, not the bottom
+    const halfW = aspect < 1.3 ? 3.4 : R * 0.86
+    camera.position.set(0, 0, halfW / (tan * aspect))
+    const halfH = camera.position.z * tan
+    cy = halfH - 1.7 - R // crest sits a little under the top edge, clear of the headline
     camera.updateProjectionMatrix()
   }
   const resize = () => {
@@ -299,27 +180,24 @@ onMounted(() => {
   window.addEventListener('pointermove', onMove, { passive: true })
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const ORBIT = 0.32 // rad/s around the ring
+  const SPEED = 0.24 // rad/s along the arc, left → right
 
   let p = props.progress
   const pose = (t: number) => {
-    const a = reduce ? 0.3 : t * ORBIT
-    const r = R * (1 + p * 0.18)
-    coins.forEach((coin, i) => {
-      const th = a + (i / N) * Math.PI * 2
-      coin.position.set(Math.sin(th) * r, Math.sin(t * 1.1 + i * 0.9) * 0.08, Math.cos(th) * r)
-      // face outward from the ring (front coin faces the camera), with a gentle extra turn of its own
-      coin.rotation.set(Math.sin(t * 0.7 + i) * 0.06, th + Math.sin(t * 0.5 + i * 1.3) * 0.35, Math.sin(t * 0.6 + i) * 0.04)
+    const base = reduce ? 0 : t * SPEED
+    const r = R * (1 + p * 0.08)
+    coins.forEach(({ slot, coin }, i) => {
+      // θ = 0 at the crest; increasing θ moves the coin to the right
+      let th = ((base + i * STEP + Math.PI) % (Math.PI * 2)) - Math.PI
+      if (th < -Math.PI) th += Math.PI * 2
+      slot.visible = Math.cos(th) > -0.2
+      slot.position.set(Math.sin(th) * r, cy + Math.cos(th) * r, 0)
+      slot.rotation.z = -th
+      coin.rotation.set(Math.sin(t * 0.8 + i) * 0.05, YAW + Math.sin(t * 0.6 + i * 1.7) * 0.08, 0)
     })
-    ring.rotation.set(TILT - mouse.y * 0.1 + p * 0.35, mouse.x * 0.25, mouse.x * -0.04)
-    ring.position.y = 0.3 + p * 0.9
-    const trackScale = r / 3.4
-    orbitalTrack.scale.set(trackScale, 1, trackScale)
-    outerTrack.scale.set(trackScale * (1 + p * 0.1), 1, trackScale * (1 + p * 0.1))
-    outerTrack.rotation.z = Math.sin(t * 0.35) * 0.06
-    particles.rotation.y = -a * 0.45
-    particles.position.y = Math.sin(t * 0.5) * 0.08
-    scene.environmentRotation.y = Math.sin(t * 0.18) * 0.35
+    arch.rotation.set(-0.1 - mouse.y * 0.06 + p * 0.2, mouse.x * 0.12, 0)
+    arch.position.y = p * 1.2
+    scene.environmentRotation.y = Math.sin(t * 0.15) * 0.3
   }
 
   resize()
@@ -330,7 +208,6 @@ onMounted(() => {
   const io = new IntersectionObserver(([e]) => (visible = !!e?.isIntersecting))
   io.observe(el)
 
-  // adaptive resolution: if a 90-frame window averages under ~48fps, step the pixel ratio down (min 1)
   let acc = 0
   let n = 0
   const adapt = (dt: number) => {
@@ -346,7 +223,7 @@ onMounted(() => {
   }
 
   const timer = new THREE.Timer()
-  let t = 1.2 // start mid-wave so the first frame already shows coins at different angles
+  let t = 0
   let raf = 0
   const loop = () => {
     raf = requestAnimationFrame(loop)
@@ -354,9 +231,7 @@ onMounted(() => {
     const dt = Math.min(timer.getDelta(), 0.05)
     if (!visible) return
     if (!reduce) t += dt
-    // frame-rate independent easing toward pointer + scroll targets
-    const k = 1 - Math.pow(0.94, dt * 60)
-    mouse.lerp(target, k)
+    mouse.lerp(target, 1 - Math.pow(0.94, dt * 60))
     p += (props.progress - p) * (1 - Math.pow(0.9, dt * 60))
     pose(t)
     renderer.render(scene, camera)
@@ -370,18 +245,7 @@ onMounted(() => {
     ro.disconnect()
     io.disconnect()
     window.removeEventListener('pointermove', onMove)
-    bodyGeo.dispose()
-    faceGeo.dispose()
-    trackGeo.dispose()
-    trackMat.dispose()
-    outerTrackGeo.dispose()
-    outerTrackMat.dispose()
-    particlesGeo.dispose()
-    particlesMat.dispose()
-    materials.forEach((m) => m.dispose())
-    colorMap.dispose()
-    bumpMap.dispose()
-    pbrMap.dispose()
+    disposables.forEach((d) => d.dispose())
     envTex.dispose()
     renderer.dispose()
     renderer.domElement.remove()
