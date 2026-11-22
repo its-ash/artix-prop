@@ -6,6 +6,7 @@ import { COINS, drawCoinFace as drawFace, type Coin } from '~/utils/cryptoCoins'
  * Arch of minted crypto coins that glides left → right in an endless loop.
  * Coins ride a large circle whose centre sits below the canvas, so only the top arc shows.
  * Each coin is yawed three-quarter to the camera (reeded edge visible) and rolled to follow the arc.
+ * As a coin crosses the crest it spins one full 360° turn, then glides on to the right.
  * Faces are canvas-drawn dies: coloured enamel field + raised symbol (colour, bump and roughness maps).
  */
 const props = withDefaults(defineProps<{ progress?: number }>(), { progress: 0 })
@@ -97,15 +98,13 @@ onMounted(() => {
   const arch = new THREE.Group()
   scene.add(arch)
 
-  const COUNT = 30 // the 16 designs cycle around the ring
-  const COIN_SCALE = 0.7
+  const COUNT = small ? 18 : 24 // the 16 designs cycle around the ring; fewer on mobile so the larger coins don't overlap
   const cache = new Map<string, THREE.Material[]>()
   const coins = Array.from({ length: COUNT }, (_, i) => COINS[i % COINS.length]!).map((def) => {
     const hit = cache.get(def.id)
     const [bodyMat, faceMat] = hit ?? makeMats(def)
     if (!hit) cache.set(def.id, [bodyMat!, faceMat!])
     const coin = new THREE.Group()
-    coin.scale.setScalar(COIN_SCALE)
     const front = new THREE.Mesh(faceGeo, faceMat)
     front.position.z = FACE_Z
     const back = new THREE.Mesh(faceGeo, faceMat)
@@ -152,15 +151,20 @@ onMounted(() => {
   const R = 7.6
   let cy = -4
   const YAW = -0.62 // three-quarter turn so the reeded edge shows, like the reference
+  const SPIN_W = 0.34 // half-width (rad) of the arc window where each coin does its full 360° turn
+  const ease = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (x * (x * 6 - 15) + 10))
   const fit = (w: number, h: number) => {
     const aspect = w / h
     camera.aspect = aspect
     const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+    const narrow = aspect < 1.3
+    const s = narrow ? 1.3 : 0.94
+    coins.forEach(({ coin }) => coin.scale.setScalar(s))
     // half-width inside R so the arc runs off the left and right window edges, not the bottom
-    const halfW = aspect < 1.3 ? 3.4 : R * 0.86
+    const halfW = narrow ? 3.1 : R * 0.86
     camera.position.set(0, 0, halfW / (tan * aspect))
     const halfH = camera.position.z * tan
-    cy = halfH - 1.7 - R // crest sits a little under the top edge, clear of the headline
+    cy = halfH - 0.75 - s - R // crest sits a little under the top edge, clear of the headline
     camera.updateProjectionMatrix()
   }
   const resize = () => {
@@ -180,7 +184,7 @@ onMounted(() => {
   window.addEventListener('pointermove', onMove, { passive: true })
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const SPEED = 0.24 // rad/s along the arc, left → right
+  const SPEED = 0.32 // rad/s along the arc, left → right
 
   let p = props.progress
   const pose = (t: number) => {
@@ -193,7 +197,8 @@ onMounted(() => {
       slot.visible = Math.cos(th) > -0.2
       slot.position.set(Math.sin(th) * r, cy + Math.cos(th) * r, 0)
       slot.rotation.z = -th
-      coin.rotation.set(Math.sin(t * 0.8 + i) * 0.05, YAW + Math.sin(t * 0.6 + i * 1.7) * 0.08, 0)
+      const spin = ease((th + SPIN_W) / (SPIN_W * 2)) * Math.PI * 2
+      coin.rotation.set(Math.sin(t * 0.8 + i) * 0.05, YAW + spin + Math.sin(t * 0.6 + i * 1.7) * 0.08, 0)
     })
     arch.rotation.set(-0.1 - mouse.y * 0.06 + p * 0.2, mouse.x * 0.12, 0)
     arch.position.y = p * 1.2

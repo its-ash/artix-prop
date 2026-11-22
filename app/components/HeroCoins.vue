@@ -259,20 +259,34 @@ onBeforeUnmount(() => stop?.())
     height: max(660px, 100svh);
     padding-top: 76px;
   }
+  .hc__content {
+    padding-top: clamp(36px, 7svh, 64px);
+  }
+  .hc__kicker {
+    margin-bottom: 26px;
+  }
   .hc__head {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
   .hc__title {
     grid-row: auto;
-    font-size: 8.4vw;
+    font-size: 9vw;
+    line-height: 1.06;
+  }
+  .hc__line + .hc__line {
+    margin-top: 0.08em;
   }
   .hc__caption {
     grid-column: 1;
+    max-width: 34ch;
     margin-top: 0;
+    font-size: 15px;
+    line-height: 1.6;
   }
   .hc__coins {
-    top: 36%;
-    bottom: 130px;
+    top: 47%;
+    bottom: 104px;
   }
   .hc__ctas .btn {
     flex: 1;
